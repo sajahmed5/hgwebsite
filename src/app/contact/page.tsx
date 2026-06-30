@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { site } from "@/data/site";
+import { site, offices, officeMapsHref } from "@/data/site";
 import PageHeader from "@/components/PageHeader";
 import ContactForm from "@/components/ContactForm";
 
 export const metadata: Metadata = {
   title: "Contact Us",
   description:
-    "Get in touch with HG Care Services in Stockport. Call 0161 975 5999, email hello@hgcare.co.uk, or send an enquiry for a free, no-obligation chat about care.",
+    "Get in touch with HG Care. Call 0161 975 5999, email hello@hgcare.co.uk, or visit one of our offices in Stockport, Liverpool, Rochdale and Coventry.",
 };
 
 export default function ContactPage() {
@@ -109,6 +109,58 @@ export default function ContactPage() {
                 <ContactForm />
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Our offices */}
+      <section className="bg-sand">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-600">
+              Our offices
+            </p>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-brand-900">
+              Find us across the North West &amp; Midlands
+            </h2>
+            <p className="mt-4 text-brand-900/70">
+              Four offices supporting families in {site.areasText}. Call us on{" "}
+              <a href={site.phoneHref} className="font-semibold text-brand-700">
+                {site.phone}
+              </a>{" "}
+              — whichever location is nearest to you.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {offices.map((o) => (
+              <div
+                key={o.name}
+                className="flex flex-col rounded-2xl border border-brand-100 bg-white p-6 shadow-sm"
+              >
+                <h3 className="text-lg font-bold text-brand-900">{o.name}</h3>
+                <address className="mt-3 flex-1 text-sm not-italic leading-relaxed text-brand-900/70">
+                  {o.org && <span className="block font-semibold">{o.org}</span>}
+                  {o.lines.map((l) => (
+                    <span key={l} className="block">
+                      {l}
+                    </span>
+                  ))}
+                  <span className="block">{o.city}</span>
+                  <span className="block font-semibold text-brand-800">
+                    {o.postcode}
+                  </span>
+                </address>
+                <a
+                  href={officeMapsHref(o)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 hover:gap-2"
+                >
+                  Get directions <span aria-hidden>→</span>
+                </a>
+              </div>
+            ))}
           </div>
         </div>
       </section>

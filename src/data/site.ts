@@ -36,6 +36,51 @@ export const site = {
     "https://www.google.com/maps/search/?api=1&query=Unit+A1+The+Embankment+Vale+Rd+Heaton+Mersey+Stockport+SK4+3GN",
 } as const;
 
+// Office locations. The Stockport site is the head office / main contact.
+export type Office = {
+  name: string;
+  org?: string;
+  lines: string[];
+  city: string;
+  postcode: string;
+};
+
+export const offices: Office[] = [
+  {
+    name: "Head Office — Stockport",
+    lines: ["Unit A1, The Embankment", "Vale Rd, Heaton Mersey"],
+    city: "Stockport",
+    postcode: "SK4 3GN",
+  },
+  {
+    name: "Liverpool",
+    org: "HG Care Regis",
+    lines: ["Liverpool Innovation Park", "360 Edge Ln, Fairfield"],
+    city: "Liverpool",
+    postcode: "L7 9NJ",
+  },
+  {
+    name: "Rochdale",
+    lines: ["160 Oldham Rd"],
+    city: "Rochdale",
+    postcode: "OL11 1AG",
+  },
+  {
+    name: "Coventry",
+    lines: ["69 Albany Road", "Earlsdon"],
+    city: "Coventry",
+    postcode: "CV5 6JR",
+  },
+];
+
+// Build a Google Maps directions link from an office's address.
+export function officeMapsHref(o: Office): string {
+  const q = [o.org, ...o.lines, o.city, o.postcode].filter(Boolean).join(", ");
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    q
+  )}`;
+}
+
 export const nav = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
