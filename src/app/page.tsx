@@ -6,6 +6,7 @@ import Testimonials from "@/components/Testimonials";
 import Councils from "@/components/Councils";
 import Reveal from "@/components/Reveal";
 import CountUp from "@/components/CountUp";
+import Logo from "@/components/Logo";
 
 export default function Home() {
   return (
@@ -246,7 +247,7 @@ export default function Home() {
       {/* ---------- Values ---------- */}
       <section className="bg-sand">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+          <div className="grid gap-10 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-600">
                 Why families choose us
@@ -266,15 +267,14 @@ export default function Home() {
               >
                 More about us <span aria-hidden>→</span>
               </Link>
-              {/* decorative brand mark */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/hg-care-mark.svg?v=2"
-                alt=""
-                aria-hidden
-                className="animate-float-slow mt-12 hidden h-44 w-auto lg:block"
-              />
             </div>
+
+            {/* decorative brand mark — sits between the two columns */}
+            <Logo
+              markOnly
+              className="animate-float-slow hidden h-44 w-auto lg:block"
+            />
+
             <div className="grid gap-5 sm:grid-cols-2">
               {values.map((v) => (
                 <div
