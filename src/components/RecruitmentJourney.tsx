@@ -151,7 +151,21 @@ export default function RecruitmentJourney() {
     setFr(out);
   }, []);
 
+  // Constant walking pace: travel time scales with distance along the road.
+  const PACE = 0.045; // seconds per 1% of the path
+  const prevDist = useRef(0);
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }, []);
+
   const carerDist = active >= 0 ? fr[active] ?? 0 : 0;
+  const travel = Math.abs(carerDist - prevDist.current);
+  const duration = reduced ? 0 : Math.max(0.35, travel * PACE);
+  useEffect(() => {
+    prevDist.current = carerDist;
+  }, [carerDist]);
+
   const s = active >= 0 ? steps[active] : null;
 
   return (
@@ -162,8 +176,8 @@ export default function RecruitmentJourney() {
         @keyframes rj2-pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
         .rj2-dashes{animation:rj2-flow 1.4s linear infinite}
         .rj2-bob{animation:rj2-bob .7s ease-in-out infinite}
-        .rj2-carer{transition:offset-distance 1.1s cubic-bezier(.4,0,.2,1)}
-        @media (prefers-reduced-motion:reduce){.rj2-dashes,.rj2-bob{animation:none}.rj2-carer{transition:none}}
+        .rj2-carer{transition-property:offset-distance;transition-timing-function:cubic-bezier(.45,0,.55,1)}
+        @media (prefers-reduced-motion:reduce){.rj2-dashes,.rj2-bob{animation:none}}
       `}</style>
 
       <p className="mb-6 text-center text-sm font-medium text-brand-700">
@@ -235,7 +249,12 @@ export default function RecruitmentJourney() {
           {/* carer character */}
           <g
             className="rj2-carer"
-            style={{ offsetPath: `path("${PATH}")`, offsetDistance: `${carerDist}%`, offsetRotate: "0deg" }}
+            style={{
+              offsetPath: `path("${PATH}")`,
+              offsetDistance: `${carerDist}%`,
+              offsetRotate: "0deg",
+              transitionDuration: `${duration}s`,
+            }}
           >
             <g className="rj2-bob">
               <rect x="-19" y="-45" width="7" height="20" rx="3.5" fill="#A9CDEC" />
@@ -291,8 +310,8 @@ export default function RecruitmentJourney() {
             }}
             className={`absolute z-20 w-60 -translate-y-1/2 rounded-2xl border-accent-500 bg-white p-5 shadow-xl ring-1 ring-brand-100 ${
               s.side === "left"
-                ? "-translate-x-[calc(100%+2rem)] border-r-4"
-                : "translate-x-8 border-l-4"
+                ? "-translate-x-[calc(100%+3.5rem)] border-r-4"
+                : "translate-x-14 border-l-4"
             }`}
           >
             <div className="flex items-center gap-2">
