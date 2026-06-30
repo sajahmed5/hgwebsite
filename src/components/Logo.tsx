@@ -4,7 +4,7 @@ export default function Logo({ chip = false }: { chip?: boolean }) {
   const img = (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/hg-care-logo.svg"
+      src="/hg-care-logo.svg?v=2"
       alt="HG Care"
       width={822}
       height={337}

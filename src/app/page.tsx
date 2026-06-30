@@ -266,6 +266,14 @@ export default function Home() {
               >
                 More about us <span aria-hidden>→</span>
               </Link>
+              {/* decorative brand mark */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/hg-care-mark.svg?v=2"
+                alt=""
+                aria-hidden
+                className="animate-float-slow mt-12 hidden h-44 w-auto lg:block"
+              />
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
               {values.map((v) => (
