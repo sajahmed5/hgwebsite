@@ -247,7 +247,7 @@ export default function Home() {
       {/* ---------- Values ---------- */}
       <section className="bg-sand">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="grid gap-10 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-600">
                 Why families choose us
@@ -267,13 +267,13 @@ export default function Home() {
               >
                 More about us <span aria-hidden>→</span>
               </Link>
-            </div>
 
-            {/* decorative brand mark — sits between the two columns */}
-            <Logo
-              markOnly
-              className="animate-float-slow hidden h-44 w-auto lg:block"
-            />
+              {/* decorative brand mark — fills the space below the link */}
+              <Logo
+                markOnly
+                className="animate-float-slow mt-12 hidden h-52 w-auto lg:block"
+              />
+            </div>
 
             <div className="grid gap-5 sm:grid-cols-2">
               {values.map((v) => (
