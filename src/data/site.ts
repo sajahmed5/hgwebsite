@@ -34,6 +34,10 @@ export const site = {
   areasText: "Manchester, Stockport, Coventry, Trafford, Rochdale & Liverpool",
   mapsHref:
     "https://www.google.com/maps/search/?api=1&query=Unit+A1+The+Embankment+Vale+Rd+Heaton+Mersey+Stockport+SK4+3GN",
+  social: {
+    instagram: "https://www.instagram.com/hgcareservices",
+    linkedin: "https://uk.linkedin.com/company/hg-care-services",
+  },
 } as const;
 
 // Office locations. The Stockport site is the head office / main contact.
