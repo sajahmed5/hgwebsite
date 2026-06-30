@@ -304,7 +304,7 @@ export const affiliations: Affiliation[] = [
     line: "Accredited employer since 2022",
     kind: "member",
     href: "https://www.livingwage.org.uk/",
-    logo: "living-wage.png",
+    logo: "living-wage.svg",
   },
   {
     label: "Homecare Association",
