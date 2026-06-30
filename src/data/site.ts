@@ -87,7 +87,7 @@ export function officeMapsHref(o: Office): string {
 
 export const nav = [
   { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
+  { label: "About", href: "/#about" },
   { label: "What We Do", href: "/services" },
   { label: "Careers", href: "/careers" },
   { label: "Contact", href: "/contact" },

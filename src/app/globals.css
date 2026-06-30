@@ -63,6 +63,25 @@ body {
   }
 }
 
+/* Gentle floating motion for decorative accents */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-float {
+    animation: float 5s ease-in-out infinite;
+  }
+  .animate-float-slow {
+    animation: float 7s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+}
+
 /* Soft decorative dotted/blob backgrounds reused across sections */
 .bg-soft-blob {
   background-image: radial-gradient(

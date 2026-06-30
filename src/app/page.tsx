@@ -4,6 +4,8 @@ import CTA from "@/components/CTA";
 import Affiliations from "@/components/Affiliations";
 import Testimonials from "@/components/Testimonials";
 import Councils from "@/components/Councils";
+import Reveal from "@/components/Reveal";
+import CountUp from "@/components/CountUp";
 
 export default function Home() {
   return (
@@ -80,7 +82,7 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            <div className="absolute -right-4 -top-4 hidden rounded-2xl bg-accent-500 px-5 py-4 text-white shadow-lg sm:block">
+            <div className="animate-float absolute -right-4 -top-4 hidden rounded-2xl bg-accent-500 px-5 py-4 text-white shadow-lg sm:block">
               <div className="text-2xl font-extrabold">{site.founded}</div>
               <div className="text-xs font-medium">caring since</div>
             </div>
@@ -91,14 +93,74 @@ export default function Home() {
       {/* ---------- Stats ---------- */}
       <section className="border-y border-brand-100 bg-white">
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 lg:grid-cols-4 lg:px-8">
-          {stats.map((s) => (
-            <div key={s.label} className="text-center">
+          {stats.map((s, i) => (
+            <Reveal key={s.label} delay={i * 80} className="text-center">
               <div className="text-3xl font-extrabold text-brand-600 sm:text-4xl">
-                {s.value}
+                <CountUp value={s.value} />
               </div>
               <div className="mt-1 text-sm text-brand-900/60">{s.label}</div>
-            </div>
+            </Reveal>
           ))}
+        </div>
+      </section>
+
+      {/* ---------- About us ---------- */}
+      <section id="about" className="scroll-mt-20 bg-cream">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+            <Reveal className="space-y-5 text-brand-900/80">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-600">
+                About HG Care
+              </p>
+              <h2 className="text-3xl font-extrabold tracking-tight text-brand-900 sm:text-4xl">
+                Caring for our community since {site.founded}
+              </h2>
+              <p>
+                What began as a small local team has grown into one of the
+                area&apos;s most trusted care providers — supporting people to
+                live well at home across {site.areasText}. Through it all, our
+                values have never changed.
+              </p>
+              <p>
+                We care for adults and children alike — from personal and
+                dementia care to children&apos;s services, live-in, palliative
+                and respite support. Every carer is carefully recruited, trained
+                in-house and DBS-checked, because the people we care for deserve
+                nothing less.
+              </p>
+              <p>
+                We&apos;re proud to be rated{" "}
+                <strong className="text-brand-700">&ldquo;Good&rdquo;</strong> by
+                the Care Quality Commission — so you can have complete confidence
+                in the care you receive.
+              </p>
+            </Reveal>
+
+            <Reveal delay={120}>
+              <div className="rounded-3xl bg-gradient-to-br from-brand-600 to-brand-800 p-8 text-white shadow-lg sm:p-10">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand-200">
+                  Our mission
+                </p>
+                <p className="mt-4 text-2xl font-bold leading-relaxed sm:text-3xl">
+                  &ldquo;{site.tagline}.&rdquo;
+                </p>
+                <p className="mt-4 text-brand-100/90">
+                  We exist to help people stay safe, independent and happy in the
+                  place they love most — their own home.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {["Compassion", "Dignity", "Trust", "Quality"].map((v) => (
+                    <span
+                      key={v}
+                      className="rounded-full bg-white/10 px-3 py-1 text-sm font-semibold ring-1 ring-white/20"
+                    >
+                      {v}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </Reveal>
+          </div>
         </div>
       </section>
 
@@ -193,7 +255,7 @@ export default function Home() {
                 forget that we&apos;re a guest in your home.
               </p>
               <Link
-                href="/about"
+                href="/#about"
                 className="mt-6 inline-flex items-center gap-2 font-semibold text-brand-700 hover:gap-3"
               >
                 More about us <span aria-hidden>→</span>

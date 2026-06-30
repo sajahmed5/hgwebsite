@@ -1,4 +1,5 @@
 import { testimonials, site } from "@/data/site";
+import Reveal from "./Reveal";
 
 export default function Testimonials() {
   return (
@@ -18,10 +19,11 @@ export default function Testimonials() {
         </div>
 
         <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {testimonials.map((t) => (
-            <figure
+          {testimonials.map((t, i) => (
+            <Reveal
               key={t.author}
-              className="flex flex-col rounded-2xl bg-white p-7 shadow-sm ring-1 ring-brand-100"
+              delay={i * 110}
+              className="flex flex-col rounded-2xl bg-white p-7 shadow-sm ring-1 ring-brand-100 transition-transform hover:-translate-y-1"
             >
               <div className="text-3xl leading-none text-accent-400" aria-hidden>
                 &ldquo;
@@ -33,7 +35,7 @@ export default function Testimonials() {
                 <span aria-hidden>⭐⭐⭐⭐⭐</span>
               </figcaption>
               <p className="mt-1 text-sm text-brand-900/60">{t.author}</p>
-            </figure>
+            </Reveal>
           ))}
         </div>
 
