@@ -3,6 +3,7 @@ import { site, values, stats } from "@/data/site";
 import PageHeader from "@/components/PageHeader";
 import CTA from "@/components/CTA";
 import Affiliations from "@/components/Affiliations";
+import Councils from "@/components/Councils";
 
 export const metadata: Metadata = {
   title: "About Us",
@@ -102,6 +103,25 @@ export default function AboutPage() {
               <p className="mt-1.5 text-sm text-brand-900/70">{v.text}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Council partnerships */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-600">
+            Trusted locally
+          </p>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-brand-900">
+            Working in partnership with local councils
+          </h2>
+          <p className="mt-4 text-brand-900/70">
+            Local authorities have trusted us to deliver care for their residents
+            for many years — a measure of the consistency and quality we provide.
+          </p>
+        </div>
+        <div className="mt-12">
+          <Councils />
         </div>
       </section>
 

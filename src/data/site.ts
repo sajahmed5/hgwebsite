@@ -231,11 +231,21 @@ export const values = [
 // Careers — why work with HG Care (from recruitment materials)
 export const perks = [
   { icon: "💷", title: "Excellent salary", text: "Competitive pay with enhanced rates for weekends and nights." },
+  { icon: "🏅", title: "Living Wage employer", text: "An accredited National Living Wage employer since 2022 — fair pay you can count on." },
   { icon: "🌱", title: "No experience needed", text: "The right attitude matters most — we'll teach you the rest." },
   { icon: "🎓", title: "Full training provided", text: "Paid, accredited training from day one through HG Training." },
   { icon: "📜", title: "Gain qualifications", text: "Work towards recognised NVQ and care qualifications." },
   { icon: "🚗", title: "Transport available", text: "Support to get between visits so you're never left stranded." },
   { icon: "🗓️", title: "Flexible hours", text: "Shifts that fit around your life — full-time, part-time or weekends." },
+];
+
+// Local-authority partnerships (years of working together).
+export const councils = [
+  { name: "Stockport Council", detail: "Adult Social Care", years: 24 },
+  { name: "Manchester City Council", years: 18 },
+  { name: "Rochdale Council", years: 12 },
+  { name: "Trafford Council", years: 9 },
+  { name: "Coventry Council", years: 1 },
 ];
 
 // HG Wellbeing — caring for the whole person

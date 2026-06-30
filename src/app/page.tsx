@@ -3,6 +3,7 @@ import { services, site, stats, values } from "@/data/site";
 import CTA from "@/components/CTA";
 import Affiliations from "@/components/Affiliations";
 import Testimonials from "@/components/Testimonials";
+import Councils from "@/components/Councils";
 
 export default function Home() {
   return (
@@ -252,6 +253,25 @@ export default function Home() {
               <p className="mt-2 text-sm text-brand-900/70">{step.d}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ---------- Council partnerships ---------- */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-600">
+            Trusted locally
+          </p>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-brand-900 sm:text-4xl">
+            Councils have trusted us for years
+          </h2>
+          <p className="mt-4 text-brand-900/70">
+            We work in partnership with local authorities to care for their
+            residents — for over two decades in some areas.
+          </p>
+        </div>
+        <div className="mt-12">
+          <Councils />
         </div>
       </section>
 
