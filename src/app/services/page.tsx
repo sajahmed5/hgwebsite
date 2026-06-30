@@ -20,6 +20,13 @@ const sections = [
   { id: "training", label: "HG Training", icon: "🎓" },
 ];
 
+// Rotating colour treatments so the service cards feel varied, not blocky.
+const careTints = [
+  { card: "from-brand-50", tile: "bg-brand-600" },
+  { card: "from-accent-50", tile: "bg-accent-500" },
+  { card: "from-brand-50", tile: "bg-brand-800" },
+];
+
 export default function WhatWeDoPage() {
   return (
     <>
@@ -72,28 +79,34 @@ export default function WhatWeDoPage() {
           </div>
 
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((s, i) => (
-              <Link
-                key={s.slug}
-                href={`/services/${s.slug}`}
-                className="group relative overflow-hidden rounded-2xl border border-brand-100 bg-white p-7 shadow-sm transition-all hover:-translate-y-1 hover:border-brand-200 hover:shadow-lg"
-              >
-                <div
-                  className={`flex h-14 w-14 items-center justify-center rounded-2xl text-2xl transition-transform group-hover:scale-110 ${
-                    i % 2 === 0 ? "bg-brand-50" : "bg-accent-50"
+            {services.map((s, i) => {
+              const t = careTints[i % careTints.length];
+              const featured = i === 0;
+              return (
+                <Link
+                  key={s.slug}
+                  href={`/services/${s.slug}`}
+                  className={`group relative flex flex-col overflow-hidden rounded-3xl bg-gradient-to-br ${t.card} to-white p-7 shadow-sm ring-1 ring-black/5 transition-all hover:-translate-y-1.5 hover:shadow-xl ${
+                    featured ? "sm:col-span-2 lg:col-span-1" : ""
                   }`}
                 >
-                  {s.icon}
-                </div>
-                <h3 className="mt-5 text-xl font-bold text-brand-900">
-                  {s.title}
-                </h3>
-                <p className="mt-2 text-sm text-brand-900/70">{s.short}</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-600 group-hover:gap-2">
-                  Learn more <span aria-hidden>→</span>
-                </span>
-              </Link>
-            ))}
+                  <div
+                    className={`flex h-16 w-16 items-center justify-center rounded-2xl text-3xl shadow-sm transition-transform group-hover:scale-110 group-hover:rotate-3 ${t.tile}`}
+                  >
+                    {s.icon}
+                  </div>
+                  <h3 className="mt-6 text-xl font-bold text-brand-900">
+                    {s.title}
+                  </h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-brand-900/70">
+                    {featured ? s.summary : s.short}
+                  </p>
+                  <span className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-brand-700 group-hover:gap-2">
+                    Learn more <span aria-hidden>→</span>
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -118,25 +131,29 @@ export default function WhatWeDoPage() {
             </p>
           </div>
 
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-14 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {wellbeing.map((w) => (
-              <div
-                key={w.title}
-                className="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-accent-100 transition-transform hover:-translate-y-1"
-              >
-                <div className="text-4xl">{w.icon}</div>
-                <h3 className="mt-4 text-lg font-bold text-brand-900">
-                  {w.title}
-                </h3>
-                <p className="mt-2 text-sm text-brand-900/70">{w.text}</p>
+              <div key={w.title} className="flex items-start gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-3xl shadow-sm ring-1 ring-accent-200">
+                  {w.icon}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-brand-900">{w.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-brand-900/70">
+                    {w.text}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
 
-          <p className="mx-auto mt-10 max-w-2xl text-center text-brand-900/70">
-            Wherever we provide care, HG Wellbeing comes as standard — because the
-            small things, like brightening someone&apos;s day, matter most.
-          </p>
+          <div className="mx-auto mt-14 max-w-3xl rounded-3xl bg-white/70 p-8 text-center shadow-sm ring-1 ring-accent-100 backdrop-blur">
+            <p className="text-lg font-medium text-brand-800">
+              &ldquo;Wherever we provide care, HG Wellbeing comes as standard —
+              because the small things, like brightening someone&apos;s day,
+              matter most.&rdquo;
+            </p>
+          </div>
         </div>
       </section>
 
