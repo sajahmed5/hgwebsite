@@ -20,11 +20,63 @@ const sections = [
   { id: "training", label: "HG Training", icon: "🎓" },
 ];
 
-// Rotating colour treatments so the service cards feel varied, not blocky.
-const careTints = [
-  { card: "from-brand-50", tile: "bg-brand-600" },
-  { card: "from-accent-50", tile: "bg-accent-500" },
-  { card: "from-brand-50", tile: "bg-brand-800" },
+// Bento layout — mixed tile sizes + colours so the services read as a
+// dynamic mosaic rather than a uniform 6-box grid. Order maps to `services`.
+const bento = [
+  // Featured (big 2x2)
+  {
+    span: "sm:col-span-2 lg:col-span-2 lg:row-span-2",
+    bg: "bg-gradient-to-br from-brand-600 to-brand-800",
+    title: "text-white",
+    body: "text-brand-100/90",
+    link: "text-white",
+    iconBg: "bg-white/15",
+  },
+  // Wide
+  {
+    span: "sm:col-span-2 lg:col-span-2",
+    bg: "bg-gradient-to-br from-accent-400 to-accent-600",
+    title: "text-white",
+    body: "text-white/90",
+    link: "text-white",
+    iconBg: "bg-white/20",
+  },
+  // Small
+  {
+    span: "lg:col-span-1",
+    bg: "bg-brand-50",
+    title: "text-brand-900",
+    body: "text-brand-900/70",
+    link: "text-brand-700",
+    iconBg: "bg-white",
+  },
+  // Small (dark)
+  {
+    span: "lg:col-span-1",
+    bg: "bg-gradient-to-br from-brand-700 to-brand-900",
+    title: "text-white",
+    body: "text-brand-100/90",
+    link: "text-white",
+    iconBg: "bg-white/15",
+  },
+  // Wide (light)
+  {
+    span: "sm:col-span-2 lg:col-span-2",
+    bg: "bg-accent-50",
+    title: "text-brand-900",
+    body: "text-brand-900/70",
+    link: "text-accent-700",
+    iconBg: "bg-white",
+  },
+  // Wide
+  {
+    span: "sm:col-span-2 lg:col-span-2",
+    bg: "bg-gradient-to-br from-brand-500 to-brand-700",
+    title: "text-white",
+    body: "text-brand-100/90",
+    link: "text-white",
+    iconBg: "bg-white/15",
+  },
 ];
 
 export default function WhatWeDoPage() {
@@ -78,32 +130,34 @@ export default function WhatWeDoPage() {
             </p>
           </div>
 
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:auto-rows-[210px] lg:grid-flow-dense lg:grid-cols-4">
             {services.map((s, i) => {
-              const t = careTints[i % careTints.length];
+              const b = bento[i % bento.length];
               const featured = i === 0;
               return (
                 <Link
                   key={s.slug}
                   href={`/services/${s.slug}`}
-                  className={`group relative flex flex-col overflow-hidden rounded-3xl bg-gradient-to-br ${t.card} to-white p-7 shadow-sm ring-1 ring-black/5 transition-all hover:-translate-y-1.5 hover:shadow-xl ${
-                    featured ? "sm:col-span-2 lg:col-span-1" : ""
-                  }`}
+                  className={`group flex flex-col justify-between overflow-hidden rounded-3xl p-6 shadow-sm ring-1 ring-black/5 transition-all hover:-translate-y-1 hover:shadow-xl ${b.bg} ${b.span}`}
                 >
                   <div
-                    className={`flex h-16 w-16 items-center justify-center rounded-2xl text-3xl shadow-sm transition-transform group-hover:scale-110 group-hover:rotate-3 ${t.tile}`}
+                    className={`flex h-14 w-14 items-center justify-center rounded-2xl text-3xl shadow-sm transition-transform group-hover:scale-110 group-hover:rotate-3 ${b.iconBg}`}
                   >
                     {s.icon}
                   </div>
-                  <h3 className="mt-6 text-xl font-bold text-brand-900">
-                    {s.title}
-                  </h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-brand-900/70">
-                    {featured ? s.summary : s.short}
-                  </p>
-                  <span className="mt-5 inline-flex items-center gap-1 text-sm font-bold text-brand-700 group-hover:gap-2">
-                    Learn more <span aria-hidden>→</span>
-                  </span>
+                  <div className="mt-4">
+                    <h3 className={`font-bold ${featured ? "text-2xl" : "text-xl"} ${b.title}`}>
+                      {s.title}
+                    </h3>
+                    <p className={`mt-1.5 text-sm leading-relaxed ${b.body}`}>
+                      {featured ? s.summary : s.short}
+                    </p>
+                    <span
+                      className={`mt-3 inline-flex items-center gap-1 text-sm font-bold ${b.link} group-hover:gap-2`}
+                    >
+                      Learn more <span aria-hidden>→</span>
+                    </span>
+                  </div>
                 </Link>
               );
             })}
