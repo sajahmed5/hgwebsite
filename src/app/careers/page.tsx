@@ -6,7 +6,7 @@ import { perks } from "@/data/site";
 export const metadata: Metadata = {
   title: "Careers",
   description:
-    "Join HG Care. Rewarding care jobs across Manchester, Stockport, Coventry, Trafford and Rochdale — excellent salary, full training and qualifications. No experience needed. Apply today.",
+    "Join HG Care. Rewarding care jobs across Manchester, Stockport, Coventry, Trafford, Rochdale and Liverpool — excellent salary, full training and qualifications. No experience needed. Apply today.",
 };
 
 const roles = [

@@ -6,7 +6,7 @@ export const site = {
   shortName: "HG Care",
   tagline: "Your Helping Hand, When Needed",
   description:
-    "HG Care is an accredited home care provider, caring for adults and children since 2002. We deliver compassionate personal, dementia, live-in, palliative and respite care across Manchester, Stockport, Coventry, Trafford and Rochdale. CQC rated Good.",
+    "HG Care is an accredited home care provider, caring for adults and children since 2002. We deliver compassionate personal, dementia, live-in, palliative and respite care across Manchester, Stockport, Coventry, Trafford, Rochdale and Liverpool. CQC rated Good.",
   phone: "0161 975 5999",
   phoneHref: "tel:01619755999",
   email: "hello@hgcare.co.uk",
@@ -23,8 +23,15 @@ export const site = {
   serviceUsers: "500+",
   careWorkers: "150+",
   // Areas served
-  areas: ["Manchester", "Stockport", "Coventry", "Trafford", "Rochdale"],
-  areasText: "Manchester, Stockport, Coventry, Trafford & Rochdale",
+  areas: [
+    "Manchester",
+    "Stockport",
+    "Coventry",
+    "Trafford",
+    "Rochdale",
+    "Liverpool",
+  ],
+  areasText: "Manchester, Stockport, Coventry, Trafford, Rochdale & Liverpool",
   mapsHref:
     "https://www.google.com/maps/search/?api=1&query=Unit+A1+The+Embankment+Vale+Rd+Heaton+Mersey+Stockport+SK4+3GN",
 } as const;

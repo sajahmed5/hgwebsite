@@ -6,7 +6,7 @@ import CTA from "@/components/CTA";
 export const metadata: Metadata = {
   title: "About Us",
   description:
-    "Learn about HG Care — a trusted home care provider caring for adults and children since 2002 across Manchester, Stockport, Coventry, Trafford and Rochdale. CQC rated Good.",
+    "Learn about HG Care — a trusted home care provider caring for adults and children since 2002 across Manchester, Stockport, Coventry, Trafford, Rochdale and Liverpool. CQC rated Good.",
 };
 
 export default function AboutPage() {

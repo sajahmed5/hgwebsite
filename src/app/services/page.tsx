@@ -7,7 +7,7 @@ import CTA from "@/components/CTA";
 export const metadata: Metadata = {
   title: "Our Care Services",
   description:
-    "Explore HG Care's home care across Manchester, Stockport, Coventry, Trafford & Rochdale — personal & adult care, dementia care, children's services, live-in & 24-hour, palliative and respite care.",
+    "Explore HG Care's home care across Manchester, Stockport, Coventry, Trafford, Rochdale & Liverpool — personal & adult care, dementia care, children's services, live-in & 24-hour, palliative and respite care.",
 };
 
 export default function ServicesPage() {
