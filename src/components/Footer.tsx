@@ -7,7 +7,7 @@ export default function Footer() {
     <footer className="mt-20 bg-brand-800 text-brand-50">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-4 lg:px-8">
         <div className="lg:col-span-1">
-          <Logo light />
+          <Logo chip />
           <p className="mt-4 max-w-xs text-sm text-brand-100/80">
             {site.tagline}. Compassionate home care for adults and children
             across {site.areasText}, since {site.founded}.
