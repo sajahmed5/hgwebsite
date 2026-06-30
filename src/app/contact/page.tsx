@@ -83,35 +83,16 @@ export default function ContactPage() {
               </a>
             </div>
 
-            <div className="relative mt-6 overflow-hidden rounded-2xl border border-brand-100 shadow-sm">
+            <div className="mt-6 overflow-hidden rounded-2xl border border-brand-100 shadow-sm">
               <iframe
-                title="HG Care, Stockport — location map"
+                title="HG Care Services, Stockport — Google Maps"
                 width="100%"
                 height="260"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                src="https://www.google.com/maps?q=Unit+A1+The+Embankment+Vale+Rd+Heaton+Mersey+Stockport+SK4+3GN&output=embed"
+                src="https://www.google.com/maps?q=HG+Care+Services,+Heaton+Mersey,+Stockport+SK4+3GN&output=embed"
                 className="block"
               />
-              {/* Branded marker overlaid on the map centre (the office location). */}
-              <div className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-full flex-col items-center">
-                <span className="mb-1 whitespace-nowrap rounded-lg bg-brand-800 px-2.5 py-1 text-xs font-bold text-white shadow-lg ring-1 ring-white/30">
-                  HG Care · Stockport
-                </span>
-                <svg width="40" height="48" viewBox="0 0 40 48" aria-hidden>
-                  <path
-                    d="M20 47C20 47 36 30.5 36 18.5C36 9.4 28.8 2 20 2C11.2 2 4 9.4 4 18.5C4 30.5 20 47 20 47Z"
-                    fill="#00606c"
-                    stroke="#ffffff"
-                    strokeWidth="2.5"
-                  />
-                  {/* heart, echoing the logo */}
-                  <path
-                    d="M20 26.5l-6.2-6c-1.9-1.8-1.9-4.7 0-6.5 1.7-1.6 4.3-1.4 5.9.3l.3.3.3-.3c1.6-1.7 4.2-1.9 5.9-.3 1.9 1.8 1.9 4.7 0 6.5l-6.2 6z"
-                    fill="#84b43c"
-                  />
-                </svg>
-              </div>
             </div>
           </div>
 
