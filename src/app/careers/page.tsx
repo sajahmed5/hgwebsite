@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import PageHeader from "@/components/PageHeader";
 import JobApplicationForm from "@/components/JobApplicationForm";
-import { perks } from "@/data/site";
+import { perks, recruitmentSteps } from "@/data/site";
 
 export const metadata: Metadata = {
   title: "Careers",
@@ -50,6 +50,65 @@ export default function CareersPage() {
               <p className="mt-2 text-sm text-brand-900/70">{p.text}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Recruitment roadmap */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-white to-sand">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="inline-flex items-center gap-2 rounded-full bg-accent-100 px-4 py-1.5 text-sm font-bold text-accent-700">
+              🗺️ Your journey with us
+            </span>
+            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-brand-900 sm:text-4xl">
+              From application to a rewarding career
+            </h2>
+            <p className="mt-4 text-brand-900/70">
+              Here&apos;s exactly how joining HG Care works — we&apos;ll be right
+              beside you at every step of the way.
+            </p>
+          </div>
+
+          <ol className="relative mt-16 grid gap-10 lg:grid-cols-6 lg:gap-6">
+            {/* connecting line — horizontal on desktop, vertical on mobile */}
+            <span
+              aria-hidden
+              className="absolute left-7 top-4 bottom-4 w-1 -translate-x-1/2 rounded bg-gradient-to-b from-brand-200 via-brand-300 to-accent-300 lg:left-0 lg:right-0 lg:top-7 lg:bottom-auto lg:h-1 lg:w-auto lg:translate-x-0 lg:bg-gradient-to-r"
+            />
+            {recruitmentSteps.map((s, i) => {
+              const last = i === recruitmentSteps.length - 1;
+              return (
+                <li
+                  key={s.title}
+                  className="relative flex items-start gap-4 lg:flex-col lg:items-center lg:gap-0 lg:text-center"
+                >
+                  <div
+                    className={`z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-lg font-extrabold text-white shadow-sm ring-4 ring-cream ${
+                      last ? "bg-accent-500" : "bg-brand-600"
+                    }`}
+                  >
+                    {i + 1}
+                  </div>
+                  <div className="lg:mt-5">
+                    <div className="text-3xl">{s.icon}</div>
+                    <h3 className="mt-2 text-base font-bold text-brand-900">
+                      {s.title}
+                    </h3>
+                    <p className="mt-1.5 text-sm text-brand-900/70">{s.text}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+
+          <div className="mt-14 text-center">
+            <a
+              href="#apply"
+              className="inline-flex items-center gap-2 rounded-full bg-accent-500 px-7 py-3.5 font-bold text-white shadow-sm transition-colors hover:bg-accent-600 hover:gap-3"
+            >
+              Start step 1 — apply now <span aria-hidden>→</span>
+            </a>
+          </div>
         </div>
       </section>
 

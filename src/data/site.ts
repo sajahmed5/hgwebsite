@@ -84,9 +84,7 @@ export function officeMapsHref(o: Office): string {
 export const nav = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
-  { label: "Services", href: "/services" },
-  { label: "Wellbeing", href: "/wellbeing" },
-  { label: "Training", href: "/training" },
+  { label: "What We Do", href: "/services" },
   { label: "Careers", href: "/careers" },
   { label: "Contact", href: "/contact" },
 ] as const;
@@ -234,4 +232,36 @@ export const perks = [
   { icon: "📜", title: "Gain qualifications", text: "Work towards recognised NVQ and care qualifications." },
   { icon: "🚗", title: "Transport available", text: "Support to get between visits so you're never left stranded." },
   { icon: "🗓️", title: "Flexible hours", text: "Shifts that fit around your life — full-time, part-time or weekends." },
+];
+
+// HG Wellbeing — caring for the whole person
+export const wellbeing = [
+  { icon: "🧘", title: "Holistic support", text: "Care for mind and body — emotional wellbeing, confidence and a sense of purpose, not just practical tasks." },
+  { icon: "🤗", title: "Companionship", text: "Friendly visits and genuine connection to tackle loneliness and keep spirits high." },
+  { icon: "🎨", title: "Meaningful activities", text: "Hobbies, gentle exercise and outings tailored to interests, keeping people active and engaged." },
+  { icon: "🌳", title: "Community connection", text: "Support to get out and about — to clubs, appointments, places of worship and local life." },
+  { icon: "🥗", title: "Healthy living", text: "Encouragement with nutrition, hydration and routines that support long-term health." },
+  { icon: "💬", title: "A listening ear", text: "Time, patience and reassurance — for the people we care for and the families who love them." },
+];
+
+// HG Training — courses our carers complete
+export const trainingCourses = [
+  "Care Certificate (the 15 standards)",
+  "Safeguarding adults & children",
+  "Moving & handling",
+  "Medication administration",
+  "Dementia awareness & best practice",
+  "First aid & basic life support",
+  "Infection prevention & control",
+  "Mental capacity & dignity in care",
+];
+
+// Careers — the recruitment journey, step by step
+export const recruitmentSteps = [
+  { icon: "📝", title: "You apply", text: "Send a quick application online — it only takes a few minutes, and no experience is needed." },
+  { icon: "💬", title: "Interview", text: "A friendly, relaxed chat so we can get to know you and answer all your questions." },
+  { icon: "🎓", title: "Training", text: "Paid induction and the Care Certificate, so you start fully prepared and confident." },
+  { icon: "💚", title: "Your first role", text: "Begin making a real difference, with a supportive team beside you every step." },
+  { icon: "📈", title: "NVQ & ongoing support", text: "Work towards recognised NVQ qualifications with continued mentoring and development." },
+  { icon: "🚀", title: "Grow further", text: "New roles and career opportunities open up as you progress with HG Care." },
 ];
