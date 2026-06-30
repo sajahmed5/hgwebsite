@@ -80,6 +80,52 @@ body {
       transform: translateY(-10px);
     }
   }
+
+  /* Drifting blurred blobs for hero backgrounds */
+  .animate-drift {
+    animation: drift 16s ease-in-out infinite;
+  }
+  .animate-drift-2 {
+    animation: drift2 20s ease-in-out infinite;
+  }
+  @keyframes drift {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    50% {
+      transform: translate(24px, -28px) scale(1.08);
+    }
+  }
+  @keyframes drift2 {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    50% {
+      transform: translate(-26px, 20px) scale(1.1);
+    }
+  }
+
+  /* Heartbeat for the logo mark */
+  .animate-heartbeat {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: heartbeat 2.8s ease-in-out infinite;
+  }
+  @keyframes heartbeat {
+    0%,
+    20%,
+    100% {
+      transform: scale(1);
+    }
+    6% {
+      transform: scale(1.16);
+    }
+    13% {
+      transform: scale(1.04);
+    }
+  }
 }
 
 /* Soft decorative dotted/blob backgrounds reused across sections */

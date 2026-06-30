@@ -12,7 +12,13 @@ export default function Home() {
     <>
       {/* ---------- Hero ---------- */}
       <section className="bg-soft-blob relative overflow-hidden">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-24 lg:px-8">
+        {/* drifting decorative blobs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+          <div className="animate-drift absolute -left-20 top-8 h-72 w-72 rounded-full bg-brand-200/40 blur-3xl" />
+          <div className="animate-drift-2 absolute right-0 top-1/4 h-80 w-80 rounded-full bg-accent-200/40 blur-3xl" />
+          <div className="animate-drift absolute -bottom-10 left-1/3 h-64 w-64 rounded-full bg-brand-300/30 blur-3xl" />
+        </div>
+        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:py-24 lg:px-8">
           <div className="reveal">
             <span className="inline-flex items-center gap-2 rounded-full bg-brand-100 px-4 py-1.5 text-sm font-semibold text-brand-700">
               ⭐ Caring since {site.founded} · CQC rated {site.cqcRating}

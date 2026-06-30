@@ -30,7 +30,11 @@ export default function Header() {
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-        <Link href="/" aria-label={`${site.name} home`} className="shrink-0">
+        <Link
+          href="/"
+          aria-label={`${site.name} home`}
+          className="shrink-0 transition-transform duration-300 hover:scale-[1.04]"
+        >
           <Logo />
         </Link>
 

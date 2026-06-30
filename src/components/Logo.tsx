@@ -26,8 +26,11 @@ export default function Logo({ light = false }: { light?: boolean }) {
           <circle cx="22" cy="20" r="6.5" />
           <path d="M10 51V36c0-6.4 5-11 11.5-11S33 29.6 33 36v15" />
           <path d="M10 51h26" />
-          {/* heart held within */}
-          <path d="M21.7 44.6l-4.6-4.3c-1.7-1.6-1.7-4.1 0-5.6 1.5-1.4 3.8-1.2 5.1.3 1.3-1.5 3.6-1.7 5.1-.3 1.7 1.5 1.7 4 0 5.6l-5.6 4.3z" />
+          {/* heart held within — gently beats */}
+          <path
+            className="animate-heartbeat"
+            d="M21.7 44.6l-4.6-4.3c-1.7-1.6-1.7-4.1 0-5.6 1.5-1.4 3.8-1.2 5.1.3 1.3-1.5 3.6-1.7 5.1-.3 1.7 1.5 1.7 4 0 5.6l-5.6 4.3z"
+          />
         </g>
       </svg>
       <span className="flex flex-col leading-none">
