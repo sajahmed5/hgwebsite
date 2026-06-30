@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Interactive recruitment journey: a winding road where clicking a milestone
-// walks the carer to that stop and expands a detail card with more info.
+// Interactive recruitment journey: a winding illustrated road. The carer waits
+// at "Start here"; clicking a milestone walks her there and opens a detail card
+// out to the side (never over the path).
 
 const VIEW_W = 680;
 const VIEW_H = 900;
@@ -45,7 +46,7 @@ const steps: Step[] = [
     blurb: "2-day induction",
     badge: "2-day course",
     detail:
-      "Before you start you complete a 2-day induction — a mix of practical and theory-based learning — so you feel confident and prepared from day one. You'll cover:",
+      "Before you start you complete a 2-day induction — a mix of practical and theory-based learning — so you feel confident from day one. You'll cover:",
     bullets: [
       "Moving & handling (practical)",
       "Safeguarding adults & children",
@@ -86,13 +87,50 @@ const steps: Step[] = [
   },
 ];
 
+// A simple person: head + rounded body.
+function Person({ x, y, body }: { x: number; y: number; body: string }) {
+  return (
+    <g>
+      <circle cx={x} cy={y} r={7.5} fill="#f1c7a4" />
+      <rect x={x - 8} y={y + 6} width={16} height={22} rx={7} fill={body} />
+    </g>
+  );
+}
+
+function Bush({ x, y }: { x: number; y: number }) {
+  return (
+    <g fill="#93c69b">
+      <ellipse cx={x} cy={y} rx={17} ry={12} />
+      <ellipse cx={x - 13} cy={y + 4} rx={12} ry={9} />
+      <ellipse cx={x + 13} cy={y + 4} rx={12} ry={9} />
+    </g>
+  );
+}
+
+function Tree({ x, y }: { x: number; y: number }) {
+  return (
+    <g>
+      <rect x={x - 3} y={y} width={6} height={20} rx={2} fill="#9a6b4a" />
+      <ellipse cx={x} cy={y - 6} rx={17} ry={19} fill="#6fae86" />
+    </g>
+  );
+}
+
+function Cloud({ x, y }: { x: number; y: number }) {
+  return (
+    <g fill="#ffffff">
+      <ellipse cx={x} cy={y} rx={20} ry={12} />
+      <ellipse cx={x + 16} cy={y + 3} rx={14} ry={9} />
+      <ellipse cx={x - 16} cy={y + 4} rx={12} ry={8} />
+    </g>
+  );
+}
+
 export default function RecruitmentJourney() {
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(-1);
   const [fr, setFr] = useState<number[]>([]);
   const pathRef = useRef<SVGPathElement>(null);
 
-  // Map each milestone's (x,y) to a percentage distance along the path so the
-  // carer can glide to it. Computed once on mount (needs the DOM geometry).
   useEffect(() => {
     const p = pathRef.current;
     if (!p) return;
@@ -113,19 +151,18 @@ export default function RecruitmentJourney() {
     setFr(out);
   }, []);
 
-  const carerDist = fr[active] ?? 0;
-  const s = steps[active];
+  const carerDist = active >= 0 ? fr[active] ?? 0 : 0;
+  const s = active >= 0 ? steps[active] : null;
 
   return (
     <div className="mt-12">
       <style>{`
         @keyframes rj2-flow{to{stroke-dashoffset:-32}}
         @keyframes rj2-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
-        @keyframes rj2-pop{from{opacity:0}to{opacity:1}}
+        @keyframes rj2-pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
         .rj2-dashes{animation:rj2-flow 1.4s linear infinite}
         .rj2-bob{animation:rj2-bob .7s ease-in-out infinite}
         .rj2-carer{transition:offset-distance 1.1s cubic-bezier(.4,0,.2,1)}
-        .rj2-pop{animation:rj2-pop .2s ease}
         @media (prefers-reduced-motion:reduce){.rj2-dashes,.rj2-bob{animation:none}.rj2-carer{transition:none}}
       `}</style>
 
@@ -133,21 +170,56 @@ export default function RecruitmentJourney() {
         👆 Tap any stop on the road to see what happens at that step
       </p>
 
-      {/* Desktop: interactive winding road */}
-      <div className="relative mx-auto hidden max-w-2xl md:block">
+      {/* Desktop: interactive illustrated road (needs room for side cards) */}
+      <div className="relative mx-auto hidden max-w-[560px] lg:block">
         <svg
           width="100%"
           viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
           xmlns="http://www.w3.org/2000/svg"
           role="img"
           aria-label="Interactive recruitment journey from applying to growing your career"
+          style={{ overflow: "visible" }}
         >
           <rect x="4" y="4" width="672" height="892" rx="22" fill="#f3faf9" />
           <ellipse cx="150" cy="770" rx="230" ry="95" fill="#dcecdd" />
           <ellipse cx="545" cy="420" rx="220" ry="105" fill="#dcecdd" />
           <ellipse cx="190" cy="210" rx="190" ry="80" fill="#dcecdd" />
           <circle cx="600" cy="80" r="34" fill="#fbe3a3" />
+          <Cloud x={150} y={95} />
+          <Cloud x={470} y={64} />
 
+          {/* scenery */}
+          <Tree x={48} y={540} />
+          <Tree x={636} y={420} />
+          <Bush x={72} y={612} />
+          <Bush x={120} y={688} />
+          <Bush x={600} y={600} />
+          <Bush x={560} y={262} />
+          <Bush x={616} y={702} />
+          <Bush x={96} y={300} />
+
+          {/* HG Care office near the start */}
+          <g>
+            <path d="M50,748 L92,723 L134,748 Z" fill="#00606c" />
+            <rect x="58" y="748" width="68" height="52" rx="3" fill="#ffffff" stroke="#cfe0e3" strokeWidth="1.5" />
+            <rect x="84" y="772" width="16" height="28" rx="2" fill="#7fb6bd" />
+            <rect x="65" y="757" width="13" height="11" rx="1.5" fill="#cfeaec" />
+            <rect x="106" y="757" width="13" height="11" rx="1.5" fill="#cfeaec" />
+            <rect x="64" y="730" width="56" height="13" rx="3" fill="#84b43c" />
+            <text x="92" y="740" textAnchor="middle" fontSize="8" fontWeight="700" fill="#ffffff" style={{ fontFamily: "var(--font-sans)" }}>
+              HG Care
+            </text>
+          </g>
+
+          {/* a lone client by the path */}
+          <Person x={92} y={392} body="#e0a06a" />
+          {/* a carer helping a client */}
+          <g>
+            <Person x={566} y={520} body="#b98ec9" />
+            <Person x={590} y={516} body="#00606c" />
+          </g>
+
+          {/* the road */}
           <path d={PATH} fill="none" stroke="#6FAE86" strokeWidth="36" strokeLinecap="round" strokeLinejoin="round" />
           <path ref={pathRef} d={PATH} fill="none" stroke="#8FC79F" strokeWidth="30" strokeLinecap="round" strokeLinejoin="round" />
           <path className="rj2-dashes" d={PATH} fill="none" stroke="#FCFDFA" strokeWidth="3" strokeLinecap="round" strokeDasharray="16 16" />
@@ -160,7 +232,7 @@ export default function RecruitmentJourney() {
           <line x1="440" y1="150" x2="440" y2="108" stroke="#C98A2E" strokeWidth="2.4" strokeLinecap="round" />
           <path d="M440,108 L470,118 L440,128 Z" fill="#84b43c" />
 
-          {/* carer */}
+          {/* carer character */}
           <g
             className="rj2-carer"
             style={{ offsetPath: `path("${PATH}")`, offsetDistance: `${carerDist}%`, offsetRotate: "0deg" }}
@@ -200,7 +272,7 @@ export default function RecruitmentJourney() {
             onClick={() => setActive(i)}
             aria-label={`Step ${i + 1}: ${step.title}`}
             style={{ left: `${(step.x / VIEW_W) * 100}%`, top: `${(step.y / VIEW_H) * 100}%` }}
-            className={`absolute z-30 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-sm font-bold text-white ring-4 ring-white transition-transform ${
+            className={`absolute z-30 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-sm font-bold text-white shadow ring-4 ring-white transition-transform ${
               active === i ? "scale-125 bg-accent-500" : "bg-brand-600 hover:scale-110"
             }`}
           >
@@ -208,13 +280,19 @@ export default function RecruitmentJourney() {
           </button>
         ))}
 
-        {/* expanded detail card for the active stop */}
-        {fr.length > 0 && (
+        {/* detail card — opens OUTWARD to the side, clear of the path */}
+        {s && (
           <div
             key={active}
-            style={{ left: `${(s.x / VIEW_W) * 100}%`, top: `${(s.y / VIEW_H) * 100}%` }}
-            className={`rj2-pop absolute z-20 w-64 -translate-y-1/2 rounded-2xl border-l-4 border-accent-500 bg-white p-5 shadow-xl ring-1 ring-brand-100 ${
-              s.side === "left" ? "translate-x-7" : "-translate-x-[calc(100%+1.75rem)]"
+            style={{
+              left: `${(s.x / VIEW_W) * 100}%`,
+              top: `${(s.y / VIEW_H) * 100}%`,
+              animation: "rj2-pop .22s ease",
+            }}
+            className={`absolute z-20 w-60 -translate-y-1/2 rounded-2xl border-accent-500 bg-white p-5 shadow-xl ring-1 ring-brand-100 ${
+              s.side === "left"
+                ? "-translate-x-[calc(100%+2rem)] border-r-4"
+                : "translate-x-8 border-l-4"
             }`}
           >
             <div className="flex items-center gap-2">
@@ -244,7 +322,7 @@ export default function RecruitmentJourney() {
       </div>
 
       {/* Mobile: tap-to-expand vertical timeline */}
-      <ol className="relative mx-auto max-w-md space-y-3 md:hidden">
+      <ol className="relative mx-auto max-w-md space-y-3 lg:hidden">
         {steps.map((step, i) => {
           const open = active === i;
           return (
