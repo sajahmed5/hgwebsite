@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Generator: Adobe Illustrator 27.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 841.9 595.3" style="enable-background:new 0 0 841.9 595.3;" xml:space="preserve">
+<svg width="197" height="159" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+	 viewBox="332 190 197 159" style="enable-background:new 0 0 841.9 595.3;" xml:space="preserve">
 <style type="text/css">
 	.st0{fill:#009CCF;}
 	.st1{fill:#FFDA19;}
@@ -52,7 +52,7 @@
 </g>
 <g>
 	<polygon class="st7" points="360.7,237.4 360.7,256.2 369.6,256.2 369.6,263.1 353.1,263.1 353.1,237.4 	"/>
-	<rect x="372.3" y="237.4" class="st7" width="7.8" height="25.6"/>
+	<rect x="372.3" y="237.4" class="st7"/>
 	<polygon class="st7" points="395.1,263 381.4,237.4 390.4,237.4 395.1,248.1 399.9,237.4 408.7,237.4 	"/>
 	<rect x="410" y="237.4" class="st7" width="7.8" height="25.6"/>
 	<polygon class="st7" points="423.9,237.3 436.6,249.2 436.6,237.4 444.2,237.4 444.2,263.2 441,263.2 428.6,251 428.6,263.1 

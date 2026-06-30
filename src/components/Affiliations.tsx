@@ -80,14 +80,14 @@ function Badge({ a }: { a: Affiliation }) {
 
   const inner = (
     <>
-      <div className="flex h-16 items-center justify-center">
+      <div className="flex h-20 items-center justify-center">
         {showLogo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             ref={imgRef}
             src={`/logos/${a.logo}`}
             alt={a.label}
-            className="max-h-16 w-auto max-w-[140px] object-contain"
+            className="max-h-20 w-auto max-w-[160px] object-contain"
             onError={() => setImgError(true)}
           />
         ) : (
@@ -121,7 +121,7 @@ export default function Affiliations({ compact = false }: { compact?: boolean })
     <div
       className={`grid gap-4 ${
         compact
-          ? "grid-cols-2 sm:grid-cols-4 lg:grid-cols-8"
+          ? "grid-cols-2 sm:grid-cols-4"
           : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
       }`}
     >
