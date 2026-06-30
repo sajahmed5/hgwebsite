@@ -57,6 +57,14 @@ export default function Footer() {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link
+                href="/faq"
+                className="text-brand-100/80 transition-colors hover:text-white"
+              >
+                FAQ
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -113,7 +121,14 @@ export default function Footer() {
           <p>
             © {new Date().getFullYear()} {site.name}. All rights reserved.
           </p>
-          <p>Accredited home care across {site.areasText}.</p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="transition-colors hover:text-white">
+              Privacy &amp; cookies
+            </Link>
+            <Link href="/faq" className="transition-colors hover:text-white">
+              FAQ
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

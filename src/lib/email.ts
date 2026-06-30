@@ -15,10 +15,15 @@ const toEmail = process.env.CONTACT_TO_EMAIL || site.email;
 const fromEmail =
   process.env.CONTACT_FROM_EMAIL || "HG Care Website <onboarding@resend.dev>";
 
+// A row is either a label/value pair or a section heading.
+export type EmailField =
+  | { label: string; value: string; section?: never }
+  | { section: string; label?: never; value?: never };
+
 type SendArgs = {
   subject: string;
-  // Ordered field label → value pairs to render in the email body.
-  fields: { label: string; value: string }[];
+  // Ordered rows (fields + optional section headings) for the email body.
+  fields: EmailField[];
   // Optional reply-to (e.g. the enquirer's email) so staff can just hit reply.
   replyTo?: string;
 };
@@ -42,11 +47,16 @@ export async function sendFormEmail({
   }
 
   const rows = fields
-    .map(
-      (f) =>
-        `<tr><td style="padding:6px 12px;font-weight:600;color:#00606c;vertical-align:top">${f.label}</td><td style="padding:6px 12px;color:#0c3338;white-space:pre-wrap">${escapeHtml(
-          f.value || "—"
-        )}</td></tr>`
+    .map((f) =>
+      f.section
+        ? `<tr><td colspan="2" style="padding:14px 12px 6px;font-weight:700;color:#fff;background:#0a3f45">${escapeHtml(
+            f.section
+          )}</td></tr>`
+        : `<tr><td style="padding:6px 12px;font-weight:600;color:#00606c;vertical-align:top">${escapeHtml(
+            f.label ?? ""
+          )}</td><td style="padding:6px 12px;color:#0c3338;white-space:pre-wrap">${escapeHtml(
+            f.value || "—"
+          )}</td></tr>`
     )
     .join("");
 
@@ -61,7 +71,11 @@ export async function sendFormEmail({
       </table>
     </div>`;
 
-  const text = fields.map((f) => `${f.label}: ${f.value || "—"}`).join("\n");
+  const text = fields
+    .map((f) =>
+      f.section ? `\n=== ${f.section} ===` : `${f.label ?? ""}: ${f.value || "—"}`
+    )
+    .join("\n");
 
   const resend = new Resend(apiKey);
   const { error } = await resend.emails.send({

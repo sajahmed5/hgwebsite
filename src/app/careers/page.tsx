@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
-import JobApplicationForm from "@/components/JobApplicationForm";
-import { perks } from "@/data/site";
+import { perks, site } from "@/data/site";
 import RecruitmentJourney from "@/components/RecruitmentJourney";
 
 export const metadata: Metadata = {
@@ -97,12 +97,12 @@ export default function CareersPage() {
           <RecruitmentJourney />
 
           <div className="mt-10 text-center">
-            <a
-              href="#apply"
+            <Link
+              href="/careers/apply"
               className="inline-flex items-center gap-2 rounded-full bg-accent-500 px-7 py-3.5 font-bold text-white shadow-sm transition-colors hover:bg-accent-600 hover:gap-3"
             >
-              Start step 1 — apply now <span aria-hidden>→</span>
-            </a>
+              Start your application <span aria-hidden>→</span>
+            </Link>
           </div>
         </div>
       </section>
@@ -138,16 +138,23 @@ export default function CareersPage() {
               </ul>
             </div>
 
-            <div id="apply" className="scroll-mt-24 rounded-2xl border border-brand-100 bg-white p-7 shadow-sm sm:p-9">
-              <h2 className="text-2xl font-bold text-brand-900">
-                Apply to join us
-              </h2>
-              <p className="mt-2 text-brand-900/70">
-                Fill in the form below and our recruitment team will be in touch.
+            <div id="apply" className="scroll-mt-24 flex flex-col justify-center rounded-2xl bg-brand-700 p-8 text-center text-white shadow-sm sm:p-10">
+              <div className="text-4xl">📝</div>
+              <h2 className="mt-4 text-2xl font-bold">Apply to join us</h2>
+              <p className="mx-auto mt-3 max-w-sm text-brand-100/90">
+                Ready to start? Our online application takes you through a few
+                short steps — personal details, experience and references. No
+                experience needed.
               </p>
-              <div className="mt-7">
-                <JobApplicationForm />
-              </div>
+              <Link
+                href="/careers/apply"
+                className="mx-auto mt-6 inline-flex items-center gap-2 rounded-full bg-accent-500 px-7 py-3.5 font-bold text-white transition-colors hover:bg-accent-600 hover:gap-3"
+              >
+                Start your application <span aria-hidden>→</span>
+              </Link>
+              <p className="mt-4 text-sm text-brand-100/70">
+                Prefer to talk first? Call {site.phone}.
+              </p>
             </div>
           </div>
         </div>

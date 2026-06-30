@@ -269,3 +269,106 @@ export const recruitmentSteps = [
   { icon: "📈", title: "NVQ & ongoing support", text: "Work towards recognised NVQ qualifications with continued mentoring and development." },
   { icon: "🚀", title: "Grow further", text: "New roles and career opportunities open up as you progress with HG Care." },
 ];
+
+// Accreditations & affiliations — shown as brand-styled badges (not logo copies).
+export type Affiliation = {
+  label: string;
+  line: string;
+  kind: "iso" | "cqc" | "member";
+  href?: string;
+  soon?: boolean;
+};
+
+export const affiliations: Affiliation[] = [
+  { label: "ISO 9001", line: "Quality Management", kind: "iso" },
+  { label: "ISO 14001", line: "Environmental Management", kind: "iso" },
+  { label: "ISO 18001", line: "Health & Safety", kind: "iso" },
+  { label: "ISO 27001", line: "Information Security", kind: "iso", soon: true },
+  {
+    label: "CQC",
+    line: "Registered · rated Good",
+    kind: "cqc",
+    href: "https://www.cqc.org.uk/",
+  },
+  {
+    label: "UKHCA",
+    line: "Homecare Association member",
+    kind: "member",
+    href: "https://www.homecareassociation.org.uk/",
+  },
+  {
+    label: "Antz Network",
+    line: "Proud member",
+    kind: "member",
+    href: "https://antznetwork.com",
+  },
+];
+
+// Testimonials. NOTE: placeholder examples — replace with real client feedback
+// (or rely on the linked Google reviews) before going fully public.
+export const testimonials = [
+  {
+    quote:
+      "They treat my mum with such kindness and respect. The same friendly carers visit each day and it's a weight off our whole family.",
+    author: "Daughter of a client · Stockport",
+  },
+  {
+    quote:
+      "Nothing is too much trouble. The team helped dad stay in his own home when we thought that wasn't possible anymore.",
+    author: "Son of a client · Manchester",
+  },
+  {
+    quote:
+      "Caring, reliable and genuinely lovely people. Knowing they're there gives me real peace of mind.",
+    author: "A client · Rochdale",
+  },
+];
+
+export const faqs = [
+  {
+    group: "For families",
+    items: [
+      {
+        q: "Which areas do you cover?",
+        a: "We provide care across Manchester, Stockport, Coventry, Trafford, Rochdale and Liverpool. If you're nearby and not sure, just ask — we'll happily check.",
+      },
+      {
+        q: "Is the first assessment free?",
+        a: "Yes. We arrange a free, no-obligation home visit to understand the support you need, your routines and preferences, before any care begins.",
+      },
+      {
+        q: "How quickly can care start?",
+        a: "It depends on your needs, but we can often arrange care quickly. Call us on 0161 975 5999 and we'll talk you through the options.",
+      },
+      {
+        q: "Are your carers trained and checked?",
+        a: "Every carer is carefully recruited, fully trained through HG Training and DBS-checked. We're registered with the CQC and rated 'Good'.",
+      },
+      {
+        q: "What types of care do you offer?",
+        a: "Personal & adult care, dementia care, children's services, live-in & 24-hour care, palliative care and respite care — all tailored to you.",
+      },
+    ],
+  },
+  {
+    group: "For carers",
+    items: [
+      {
+        q: "Do I need experience to apply?",
+        a: "No — the right attitude matters most. We provide full, paid training including a 2-day induction and the Care Certificate, so you start confident.",
+      },
+      {
+        q: "What training and qualifications will I get?",
+        a: "A paid induction, the Care Certificate, and funded NVQ qualifications with ongoing mentoring and specialist training throughout your career.",
+      },
+      {
+        q: "What are the hours like?",
+        a: "Flexible — full-time, part-time, nights, weekends and live-in roles are available. We'll find shifts that fit around your life.",
+      },
+      {
+        q: "How do I apply?",
+        a: "Complete our online application form — it only takes a little while and you can save your progress as you go through the steps.",
+      },
+    ],
+  },
+];

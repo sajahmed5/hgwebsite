@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { services, site, stats, values } from "@/data/site";
 import CTA from "@/components/CTA";
+import Affiliations from "@/components/Affiliations";
+import Testimonials from "@/components/Testimonials";
 
 export default function Home() {
   return (
@@ -96,6 +98,16 @@ export default function Home() {
               <div className="mt-1 text-sm text-brand-900/60">{s.label}</div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ---------- Affiliations strip ---------- */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-7xl px-4 pb-12 pt-4 sm:px-6 lg:px-8">
+          <p className="mb-8 text-center text-sm font-semibold uppercase tracking-[0.18em] text-brand-900/50">
+            Accredited &amp; trusted
+          </p>
+          <Affiliations compact />
         </div>
       </section>
 
@@ -243,8 +255,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ---------- Testimonials ---------- */}
+      <Testimonials />
+
       {/* ---------- Careers teaser ---------- */}
-      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="grid items-center gap-8 rounded-2xl bg-brand-50 p-8 ring-1 ring-brand-100 sm:p-12 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-600">
