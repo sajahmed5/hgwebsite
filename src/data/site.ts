@@ -287,31 +287,49 @@ export type Affiliation = {
   kind: "iso" | "cqc" | "member";
   href?: string;
   soon?: boolean;
+  // Official logo filename in /public/logos. Falls back to a styled badge if
+  // the file isn't present yet.
+  logo?: string;
 };
 
 export const affiliations: Affiliation[] = [
-  { label: "ISO 9001", line: "Quality Management", kind: "iso" },
-  { label: "ISO 14001", line: "Environmental Management", kind: "iso" },
-  { label: "ISO 18001", line: "Health & Safety", kind: "iso" },
-  { label: "ISO 27001", line: "Information Security", kind: "iso", soon: true },
   {
     label: "CQC",
     line: "Registered · rated Good",
     kind: "cqc",
     href: "https://www.cqc.org.uk/",
+    logo: "cqc.png",
   },
   {
-    label: "UKHCA",
-    line: "Homecare Association member",
+    label: "Living Wage Foundation",
+    line: "Accredited employer since 2022",
+    kind: "member",
+    href: "https://www.livingwage.org.uk/",
+    logo: "living-wage.png",
+  },
+  {
+    label: "Homecare Association",
+    line: "Member",
     kind: "member",
     href: "https://www.homecareassociation.org.uk/",
+    logo: "homecare-association.png",
   },
   {
-    label: "Antz Network",
-    line: "Proud member",
+    label: "Antz",
+    line: "Member",
     kind: "member",
     href: "https://antznetwork.com",
+    logo: "antz.png",
   },
+  { label: "ISO 9001", line: "Quality Management", kind: "iso" },
+  { label: "ISO 14001", line: "Environmental Management", kind: "iso" },
+  {
+    label: "ISO 45001",
+    line: "Health & Safety",
+    kind: "iso",
+    logo: "iso-45001.png",
+  },
+  { label: "ISO 27001", line: "Information Security", kind: "iso", soon: true },
 ];
 
 // Testimonials. NOTE: placeholder examples — replace with real client feedback
