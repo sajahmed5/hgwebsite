@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+/* ============================================================
+   HG Care Services — Design System
+   Warm & caring: sage/teal greens, soft coral accent, cream bg
+   ============================================================ */
+@theme {
+  /* Brand — petrol teal (from the HG Care logo #00606c) */
+  --color-brand-50: #edf6f7;
+  --color-brand-100: #d2e8ea;
+  --color-brand-200: #a3d0d4;
+  --color-brand-300: #6db1b8;
+  --color-brand-400: #318e98;
+  --color-brand-500: #0a7079;
+  --color-brand-600: #00606c;
+  --color-brand-700: #015159;
+  --color-brand-800: #0a3f45;
+  --color-brand-900: #0c3338;
+
+  /* Accent — olive / lime green (from the logo #84b43c) */
+  --color-accent-50: #f6faec;
+  --color-accent-100: #e9f2cf;
+  --color-accent-200: #d4e6a4;
+  --color-accent-300: #b6d36f;
+  --color-accent-400: #9cc04a;
+  --color-accent-500: #84b43c;
+  --color-accent-600: #67912c;
+  --color-accent-700: #4f6f25;
+
+  /* Soft neutrals */
+  --color-cream: #f8faf9;
+  --color-sand: #eef4f2;
+
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-cream);
+  color: #25342d;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Subtle reveal-on-scroll, progressively enhanced */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: reveal 0.7s ease forwards;
+  }
+  @keyframes reveal {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Soft decorative dotted/blob backgrounds reused across sections */
+.bg-soft-blob {
+  background-image: radial-gradient(
+      circle at 15% 20%,
+      var(--color-brand-100),
+      transparent 40%
+    ),
+    radial-gradient(circle at 85% 0%, var(--color-accent-100), transparent 35%);
+}
