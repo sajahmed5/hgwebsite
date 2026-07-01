@@ -1,19 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { site } from "@/data/site";
 
 type Field = {
   name: string;
   label: string;
-  type?: "text" | "email" | "tel" | "date" | "textarea" | "select" | "areas" | "consent";
+  type?:
+    | "text"
+    | "email"
+    | "tel"
+    | "date"
+    | "textarea"
+    | "select"
+    | "areas"
+    | "shifts"
+    | "consent"
+    | "heading";
   options?: string[];
   required?: boolean;
   full?: boolean;
   hint?: string;
   yesno?: boolean;
+  showIf?: (v: Record<string, string>) => boolean;
 };
+
+// True if a move-in date is within the last 5 years (i.e. lived there < 5 yrs),
+// which means we still need the previous address to cover 5 years of history.
+function movedInRecently(dateStr?: string) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return false;
+  const fiveYearsAgo = new Date();
+  fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+  return d > fiveYearsAgo;
+}
+
+const SHIFT_OPTIONS = [
+  "Morning & Lunch (7am–3pm)",
+  "Tea & bed (3pm–10pm)",
+  "All day (7am–10pm)",
+];
 
 const steps: { title: string; intro?: string; fields: Field[] }[] = [
   {
@@ -30,7 +58,7 @@ const steps: { title: string; intro?: string; fields: Field[] }[] = [
       { name: "cityOfBirth", label: "City of birth" },
       { name: "countryOfBirth", label: "Country of birth" },
       { name: "nationality", label: "Nationality" },
-      { name: "nameChanged", label: "Ever changed your name? (marriage, deed poll, etc.)", yesno: true },
+      { name: "nameChanged", label: "Have you ever changed your name? (marriage, deed poll, etc.)", yesno: true, full: true },
     ],
   },
   {
@@ -39,7 +67,7 @@ const steps: { title: string; intro?: string; fields: Field[] }[] = [
       { name: "rightToWork", label: "Do you have the legal right to work in the UK?", yesno: true, required: true },
       { name: "drivingLicence", label: "Do you hold a UK/EU driving licence?", yesno: true },
       { name: "availability", label: "Availability", type: "select", options: ["Full time", "Part time", "Either"] },
-      { name: "shiftHours", label: "Preferred shift hours", hint: "e.g. All day (7am–9pm), mornings, nights…" },
+      { name: "shifts", label: "Preferred shift hours", type: "shifts", full: true },
       { name: "areas", label: "Preferred areas of work", type: "areas", full: true },
     ],
   },
@@ -47,12 +75,26 @@ const steps: { title: string; intro?: string; fields: Field[] }[] = [
     title: "Address history",
     intro: "Please give your address history for the last 5 years.",
     fields: [
-      { name: "address1", label: "Current home address", type: "textarea", required: true, full: true },
-      { name: "address1Date", label: "Date moved in", type: "date" },
-      { name: "address2", label: "Previous address 1 (if within 5 years)", type: "textarea", full: true },
-      { name: "address2Date", label: "Date moved in", type: "date" },
-      { name: "address3", label: "Previous address 2 (if within 5 years)", type: "textarea", full: true },
-      { name: "address3Date", label: "Date moved in", type: "date" },
+      { name: "_h1", label: "Current home address", type: "heading", full: true },
+      { name: "address1Line1", label: "Address line 1", required: true, full: true },
+      { name: "address1Line2", label: "Address line 2", full: true },
+      { name: "address1City", label: "Town / City" },
+      { name: "address1Postcode", label: "Postcode", required: true },
+      { name: "address1Date", label: "Date you moved in", type: "date" },
+
+      { name: "_h2", label: "Previous address", type: "heading", full: true, showIf: (v) => movedInRecently(v.address1Date) },
+      { name: "address2Line1", label: "Address line 1", full: true, showIf: (v) => movedInRecently(v.address1Date) },
+      { name: "address2Line2", label: "Address line 2", full: true, showIf: (v) => movedInRecently(v.address1Date) },
+      { name: "address2City", label: "Town / City", showIf: (v) => movedInRecently(v.address1Date) },
+      { name: "address2Postcode", label: "Postcode", showIf: (v) => movedInRecently(v.address1Date) },
+      { name: "address2Date", label: "Date you moved in", type: "date", showIf: (v) => movedInRecently(v.address1Date) },
+
+      { name: "_h3", label: "Earlier address", type: "heading", full: true, showIf: (v) => movedInRecently(v.address2Date) },
+      { name: "address3Line1", label: "Address line 1", full: true, showIf: (v) => movedInRecently(v.address2Date) },
+      { name: "address3Line2", label: "Address line 2", full: true, showIf: (v) => movedInRecently(v.address2Date) },
+      { name: "address3City", label: "Town / City", showIf: (v) => movedInRecently(v.address2Date) },
+      { name: "address3Postcode", label: "Postcode", showIf: (v) => movedInRecently(v.address2Date) },
+      { name: "address3Date", label: "Date you moved in", type: "date", showIf: (v) => movedInRecently(v.address2Date) },
     ],
   },
   {
@@ -88,14 +130,16 @@ const steps: { title: string; intro?: string; fields: Field[] }[] = [
     title: "References & declaration",
     intro: "Two referees — one should be your most recent employer.",
     fields: [
-      { name: "ref1Name", label: "Reference 1 — name", required: true },
-      { name: "ref1Position", label: "Reference 1 — position" },
-      { name: "ref1Org", label: "Reference 1 — organisation" },
-      { name: "ref1Email", label: "Reference 1 — email", type: "email" },
-      { name: "ref1Relationship", label: "Reference 1 — relationship to you" },
-      { name: "ref2Name", label: "Reference 2 — name" },
-      { name: "ref2Phone", label: "Reference 2 — telephone", type: "tel" },
-      { name: "ref2Relationship", label: "Reference 2 — relationship to you" },
+      { name: "_r1", label: "Reference 1", type: "heading", full: true },
+      { name: "ref1Name", label: "Name", required: true },
+      { name: "ref1Position", label: "Position" },
+      { name: "ref1Org", label: "Organisation" },
+      { name: "ref1Email", label: "Email", type: "email" },
+      { name: "ref1Relationship", label: "Relationship to you" },
+      { name: "_r2", label: "Reference 2", type: "heading", full: true },
+      { name: "ref2Name", label: "Name" },
+      { name: "ref2Phone", label: "Telephone", type: "tel" },
+      { name: "ref2Relationship", label: "Relationship to you" },
       { name: "signature", label: "Type your full name to sign", required: true, full: true },
       { name: "consent", label: "consent", type: "consent", full: true },
     ],
@@ -105,22 +149,38 @@ const steps: { title: string; intro?: string; fields: Field[] }[] = [
 const inputCls =
   "w-full rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-brand-900 placeholder-brand-900/40 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200";
 
+const pillCls = (on: boolean) =>
+  `rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+    on
+      ? "bg-brand-600 text-white"
+      : "border border-brand-200 bg-white text-brand-800 hover:bg-brand-50"
+  }`;
+
 export default function ApplicationForm() {
   const [step, setStep] = useState(0);
   const [values, setValues] = useState<Record<string, string>>({});
   const [areas, setAreas] = useState<string[]>([]);
+  const [shifts, setShifts] = useState<string[]>([]);
+  const [nameChanges, setNameChanges] = useState([{ name: "", date: "" }]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const formRef = useRef<HTMLDivElement>(null);
 
   const set = (name: string, v: string) =>
     setValues((prev) => ({ ...prev, [name]: v }));
 
+  const toTop = () =>
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  const visibleFields = () =>
+    steps[step].fields.filter((f) => !f.showIf || f.showIf(values));
+
   const validateStep = () => {
     const e: Record<string, string> = {};
-    for (const f of steps[step].fields) {
+    for (const f of visibleFields()) {
+      if (f.type === "heading" || f.type === "consent") continue;
       const v = (values[f.name] ?? "").trim();
-      if (f.required && !v && f.type !== "consent")
-        e[f.name] = "This field is required.";
+      if (f.required && !v) e[f.name] = "This field is required.";
       if (f.type === "email" && v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))
         e[f.name] = "Please enter a valid email address.";
     }
@@ -133,27 +193,51 @@ export default function ApplicationForm() {
   const next = () => {
     if (validateStep()) {
       setStep((s) => Math.min(s + 1, steps.length - 1));
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      toTop();
     }
   };
   const back = () => {
     setErrors({});
     setStep((s) => Math.max(s - 1, 0));
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    toTop();
   };
 
   async function submit() {
     if (!validateStep()) return;
     setStatus("sending");
+    const joinAddr = (p: string) =>
+      [
+        values[`${p}Line1`],
+        values[`${p}Line2`],
+        values[`${p}City`],
+        values[`${p}Postcode`],
+      ]
+        .filter(Boolean)
+        .join(", ");
+    const payload = {
+      ...values,
+      areas: areas.join(", "),
+      shiftHours: shifts.join(", "),
+      nameChangeDetails:
+        values.nameChanged === "Yes"
+          ? nameChanges
+              .filter((n) => n.name || n.date)
+              .map((n) => `${n.name || "—"} (${n.date || "—"})`)
+              .join("; ")
+          : "",
+      address1: joinAddr("address1"),
+      address2: joinAddr("address2"),
+      address3: joinAddr("address3"),
+    };
     try {
       const res = await fetch("/api/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...values, areas: areas.join(", ") }),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         setStatus("sent");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        toTop();
         return;
       }
       const body = await res.json().catch(() => ({}));
@@ -170,7 +254,7 @@ export default function ApplicationForm() {
 
   if (status === "sent") {
     return (
-      <div className="rounded-2xl border border-brand-200 bg-brand-50 p-10 text-center">
+      <div ref={formRef} className="scroll-mt-28 rounded-2xl border border-brand-200 bg-brand-50 p-10 text-center">
         <div className="text-5xl">🎉</div>
         <h2 className="mt-4 text-2xl font-bold text-brand-900">
           Application received!
@@ -192,32 +276,37 @@ export default function ApplicationForm() {
   const pct = Math.round(((step + 1) / steps.length) * 100);
 
   const renderField = (f: Field) => {
-    if (f.type === "areas") {
+    if (f.showIf && !f.showIf(values)) return null;
+
+    if (f.type === "heading") {
+      return (
+        <h3 key={f.name} className="sm:col-span-2 border-b border-brand-100 pb-2 text-sm font-bold uppercase tracking-wide text-brand-700">
+          {f.label}
+        </h3>
+      );
+    }
+
+    if (f.type === "areas" || f.type === "shifts") {
+      const opts = f.type === "areas" ? site.areas : SHIFT_OPTIONS;
+      const sel = f.type === "areas" ? areas : shifts;
+      const setSel = f.type === "areas" ? setAreas : setShifts;
       return (
         <fieldset key={f.name} className="sm:col-span-2">
-          <legend className="text-sm font-semibold text-brand-900">
-            {f.label}
-          </legend>
+          <legend className="text-sm font-semibold text-brand-900">{f.label}</legend>
           <div className="mt-2 flex flex-wrap gap-2">
-            {site.areas.map((a) => {
-              const on = areas.includes(a);
+            {opts.map((o) => {
+              const on = sel.includes(o);
               return (
                 <button
                   type="button"
-                  key={a}
+                  key={o}
                   onClick={() =>
-                    setAreas((prev) =>
-                      on ? prev.filter((x) => x !== a) : [...prev, a]
-                    )
+                    setSel((prev) => (on ? prev.filter((x) => x !== o) : [...prev, o]))
                   }
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                    on
-                      ? "bg-brand-600 text-white"
-                      : "border border-brand-200 bg-white text-brand-800 hover:bg-brand-50"
-                  }`}
+                  className={pillCls(on)}
                 >
                   {on ? "✓ " : ""}
-                  {a}
+                  {o}
                 </button>
               );
             })}
@@ -228,10 +317,7 @@ export default function ApplicationForm() {
 
     if (f.type === "consent") {
       return (
-        <label
-          key={f.name}
-          className="flex cursor-pointer items-start gap-3 rounded-2xl bg-sand p-5 sm:col-span-2"
-        >
+        <label key={f.name} className="flex cursor-pointer items-start gap-3 rounded-2xl bg-sand p-5 sm:col-span-2">
           <input
             type="checkbox"
             checked={values.consent === "yes"}
@@ -247,9 +333,7 @@ export default function ApplicationForm() {
             </Link>
             .
             {errors.consent && (
-              <span className="mt-1 block font-semibold text-accent-600">
-                {errors.consent}
-              </span>
+              <span className="mt-1 block font-semibold text-accent-600">{errors.consent}</span>
             )}
           </span>
         </label>
@@ -259,9 +343,7 @@ export default function ApplicationForm() {
     if (f.yesno) {
       return (
         <div key={f.name} className={f.full ? "sm:col-span-2" : ""}>
-          <span className="block text-sm font-semibold text-brand-900">
-            {f.label}
-          </span>
+          <span className="block text-sm font-semibold text-brand-900">{f.label}</span>
           <div className="mt-2 flex gap-2">
             {["Yes", "No"].map((opt) => (
               <button
@@ -278,8 +360,52 @@ export default function ApplicationForm() {
               </button>
             ))}
           </div>
-          {errors[f.name] && (
-            <p className="mt-1 text-sm text-accent-600">{errors[f.name]}</p>
+          {errors[f.name] && <p className="mt-1 text-sm text-accent-600">{errors[f.name]}</p>}
+
+          {/* Repeatable previous names when "Yes" */}
+          {f.name === "nameChanged" && values.nameChanged === "Yes" && (
+            <div className="mt-4 space-y-3 rounded-2xl bg-sand p-4">
+              <p className="text-sm font-semibold text-brand-900">
+                Previous name(s) &amp; date of change
+              </p>
+              {nameChanges.map((nc, i) => (
+                <div key={i} className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    value={nc.name}
+                    onChange={(e) =>
+                      setNameChanges((arr) => arr.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))
+                    }
+                    placeholder="Previous name"
+                    className={inputCls}
+                  />
+                  <input
+                    type="date"
+                    value={nc.date}
+                    onChange={(e) =>
+                      setNameChanges((arr) => arr.map((x, j) => (j === i ? { ...x, date: e.target.value } : x)))
+                    }
+                    className={`${inputCls} sm:w-48`}
+                  />
+                  {nameChanges.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setNameChanges((arr) => arr.filter((_, j) => j !== i))}
+                      aria-label="Remove"
+                      className="shrink-0 rounded-xl border border-brand-200 px-3 text-brand-700 hover:bg-white"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setNameChanges((arr) => [...arr, { name: "", date: "" }])}
+                className="text-sm font-semibold text-brand-700 hover:text-brand-900"
+              >
+                + Add another name
+              </button>
+            </div>
           )}
         </div>
       );
@@ -291,113 +417,57 @@ export default function ApplicationForm() {
           {f.label} {f.required && <span className="text-accent-600">*</span>}
         </label>
         {f.type === "textarea" ? (
-          <textarea
-            id={f.name}
-            rows={3}
-            value={values[f.name] ?? ""}
-            onChange={(e) => set(f.name, e.target.value)}
-            className={`mt-1.5 ${inputCls}`}
-          />
+          <textarea id={f.name} rows={3} value={values[f.name] ?? ""} onChange={(e) => set(f.name, e.target.value)} className={`mt-1.5 ${inputCls}`} />
         ) : f.type === "select" ? (
-          <select
-            id={f.name}
-            value={values[f.name] ?? ""}
-            onChange={(e) => set(f.name, e.target.value)}
-            className={`mt-1.5 ${inputCls}`}
-          >
+          <select id={f.name} value={values[f.name] ?? ""} onChange={(e) => set(f.name, e.target.value)} className={`mt-1.5 ${inputCls}`}>
             <option value="">Please choose…</option>
             {f.options?.map((o) => (
               <option key={o}>{o}</option>
             ))}
           </select>
         ) : (
-          <input
-            id={f.name}
-            type={f.type ?? "text"}
-            value={values[f.name] ?? ""}
-            onChange={(e) => set(f.name, e.target.value)}
-            className={`mt-1.5 ${inputCls}`}
-          />
+          <input id={f.name} type={f.type ?? "text"} value={values[f.name] ?? ""} onChange={(e) => set(f.name, e.target.value)} className={`mt-1.5 ${inputCls}`} />
         )}
-        {f.hint && !errors[f.name] && (
-          <p className="mt-1 text-xs text-brand-900/50">{f.hint}</p>
-        )}
-        {errors[f.name] && (
-          <p className="mt-1 text-sm text-accent-600">{errors[f.name]}</p>
-        )}
+        {f.hint && !errors[f.name] && <p className="mt-1 text-xs text-brand-900/50">{f.hint}</p>}
+        {errors[f.name] && <p className="mt-1 text-sm text-accent-600">{errors[f.name]}</p>}
       </div>
     );
   };
 
   return (
-    <div className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm sm:p-9">
-      {/* progress */}
+    <div ref={formRef} className="scroll-mt-28 rounded-2xl border border-brand-100 bg-white p-6 shadow-sm sm:p-9">
       <div className="mb-7">
         <div className="flex items-center justify-between text-sm font-semibold text-brand-700">
-          <span>
-            Step {step + 1} of {steps.length} — {current.title}
-          </span>
+          <span>Step {step + 1} of {steps.length} — {current.title}</span>
           <span>{pct}%</span>
         </div>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-brand-100">
-          <div
-            className="h-full rounded-full bg-accent-500 transition-all"
-            style={{ width: `${pct}%` }}
-          />
+          <div className="h-full rounded-full bg-accent-500 transition-all" style={{ width: `${pct}%` }} />
         </div>
       </div>
 
-      {current.intro && (
-        <p className="mb-5 text-sm text-brand-900/70">{current.intro}</p>
-      )}
+      {current.intro && <p className="mb-5 text-sm text-brand-900/70">{current.intro}</p>}
 
-      {/* Honeypot */}
-      <input
-        type="text"
-        name="company"
-        tabIndex={-1}
-        autoComplete="off"
-        className="hidden"
-        aria-hidden
-        value={values.company ?? ""}
-        onChange={(e) => set("company", e.target.value)}
-      />
+      <input type="text" name="company" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden value={values.company ?? ""} onChange={(e) => set("company", e.target.value)} />
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        {current.fields.map(renderField)}
-      </div>
+      <div className="grid gap-5 sm:grid-cols-2">{current.fields.map(renderField)}</div>
 
       {status === "error" && (
         <p className="mt-5 rounded-lg bg-accent-50 px-4 py-3 text-sm text-accent-700">
-          Sorry — something went wrong submitting your application. Please try
-          again, or email us your CV directly.
+          Sorry — something went wrong submitting your application. Please try again, or email us your CV directly.
         </p>
       )}
 
       <div className="mt-8 flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={back}
-          disabled={step === 0}
-          className="rounded-full px-5 py-3 text-sm font-semibold text-brand-700 disabled:opacity-0"
-        >
+        <button type="button" onClick={back} disabled={step === 0} className="rounded-full px-5 py-3 text-sm font-semibold text-brand-700 disabled:opacity-0">
           ← Back
         </button>
         {step < steps.length - 1 ? (
-          <button
-            type="button"
-            onClick={next}
-            className="rounded-full bg-brand-600 px-7 py-3 font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
-          >
+          <button type="button" onClick={next} className="rounded-full bg-brand-600 px-7 py-3 font-semibold text-white shadow-sm transition-colors hover:bg-brand-700">
             Continue →
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={submit}
-            disabled={status === "sending"}
-            className="rounded-full bg-accent-500 px-7 py-3 font-semibold text-white shadow-sm transition-colors hover:bg-accent-600 disabled:opacity-70"
-          >
+          <button type="button" onClick={submit} disabled={status === "sending"} className="rounded-full bg-accent-500 px-7 py-3 font-semibold text-white shadow-sm transition-colors hover:bg-accent-600 disabled:opacity-70">
             {status === "sending" ? "Submitting…" : "Submit application"}
           </button>
         )}

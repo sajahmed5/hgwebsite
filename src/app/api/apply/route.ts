@@ -20,6 +20,7 @@ const LAYOUT: { section: string; fields: [string, string][] }[] = [
       ["countryOfBirth", "Country of birth"],
       ["nationality", "Nationality"],
       ["nameChanged", "Ever changed name?"],
+      ["nameChangeDetails", "Previous name(s) & date(s)"],
     ],
   },
   {
