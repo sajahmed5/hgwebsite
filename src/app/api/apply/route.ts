@@ -79,18 +79,19 @@ const LAYOUT: { section: string; fields: [string, string][] }[] = [
       ["ref1Position", "Reference 1 — position"],
       ["ref1Org", "Reference 1 — organisation"],
       ["ref1Email", "Reference 1 — email"],
+      ["ref1Phone", "Reference 1 — telephone"],
       ["ref1Relationship", "Reference 1 — relationship"],
       ["ref2Name", "Reference 2 — name"],
+      ["ref2Position", "Reference 2 — position"],
+      ["ref2Org", "Reference 2 — organisation"],
+      ["ref2Email", "Reference 2 — email"],
       ["ref2Phone", "Reference 2 — telephone"],
       ["ref2Relationship", "Reference 2 — relationship"],
     ],
   },
   {
     section: "Declaration",
-    fields: [
-      ["signature", "Signed (typed name)"],
-      ["consent", "Consent given"],
-    ],
+    fields: [["consent", "Consent given"]],
   },
 ];
 
