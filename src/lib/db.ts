@@ -15,6 +15,64 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export const isDbConfigured = () => Boolean(url && serviceKey);
 
+const client = () =>
+  createClient(url!, serviceKey!, { auth: { persistSession: false } });
+
+export type ApplicationRow = {
+  id: string;
+  created_at: string;
+  first_name: string | null;
+  surname: string | null;
+  email: string | null;
+  mobile: string | null;
+  availability: string | null;
+  areas: string[] | null;
+  languages: string[] | null;
+  data: Record<string, unknown>;
+};
+
+// Summary rows for the admin list (no heavy `data` blob).
+export async function listApplications(): Promise<ApplicationRow[]> {
+  if (!isDbConfigured()) return [];
+  const { data, error } = await client()
+    .from("applications")
+    .select("id, created_at, first_name, surname, email, mobile, availability, areas, languages")
+    .order("created_at", { ascending: false })
+    .limit(1000);
+  if (error) {
+    console.error("Supabase list error:", error);
+    return [];
+  }
+  return (data ?? []) as ApplicationRow[];
+}
+
+// One full application (including the complete `data` record).
+export async function getApplication(id: string): Promise<ApplicationRow | null> {
+  if (!isDbConfigured()) return null;
+  const { data, error } = await client()
+    .from("applications")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) {
+    console.error("Supabase get error:", error);
+    return null;
+  }
+  return (data as ApplicationRow) ?? null;
+}
+
+export async function getLanguageCounts(): Promise<{ language: string; speakers: number }[]> {
+  if (!isDbConfigured()) return [];
+  const { data, error } = await client()
+    .from("language_counts")
+    .select("*");
+  if (error) {
+    console.error("Supabase language_counts error:", error);
+    return [];
+  }
+  return (data ?? []) as { language: string; speakers: number }[];
+}
+
 // Split the comma-joined strings the form sends (e.g. "Urdu, Twi") into a
 // clean array for the text[] columns that power reporting.
 const toArray = (v: unknown) =>
@@ -32,11 +90,8 @@ export async function saveApplication(
   }
 
   const str = (k: string) => String(payload[k] ?? "").trim();
-  const supabase = createClient(url!, serviceKey!, {
-    auth: { persistSession: false },
-  });
 
-  const { error } = await supabase.from("applications").insert({
+  const { error } = await client().from("applications").insert({
     first_name: str("firstName"),
     surname: str("surname"),
     email: str("email"),
