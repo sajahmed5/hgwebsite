@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { site } from "@/data/site";
 
@@ -11,6 +11,8 @@ type Field = {
     | "text"
     | "email"
     | "tel"
+    | "number"
+    | "postcode"
     | "date"
     | "month"
     | "textarea"
@@ -18,6 +20,7 @@ type Field = {
     | "selectOther"
     | "areas"
     | "shifts"
+    | "languages"
     | "consent"
     | "heading"
     | "note"
@@ -29,7 +32,6 @@ type Field = {
   full?: boolean;
   hint?: string;
   yesno?: boolean;
-  yesnoOptions?: string[];
   showIf?: (v: Record<string, string>) => boolean;
 };
 
@@ -37,6 +39,16 @@ const SHIFT_OPTIONS = [
   "Morning & Lunch (7am–3pm)",
   "Tea & bed (3pm–10pm)",
   "All day (7am–10pm)",
+];
+
+const POPULAR_LANGUAGES = [
+  "English",
+  "Urdu",
+  "Punjabi",
+  "Bengali",
+  "Somali",
+  "Arabic",
+  "Polish",
 ];
 
 const RELIGION_OPTIONS = [
@@ -96,79 +108,117 @@ const HEARD_OPTIONS = [
   "Other (please specify)",
 ];
 
-// Show a free-text "please specify" box for these choices.
 const needsSpecify = (v: string) =>
   /please specify|self-describe/i.test(v || "");
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// UK postcode validation (permissive but genuine format).
+const isPostcode = (v: string) =>
+  /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/i.test(v.trim());
+
+const isValidPhone = (raw: string) => {
+  const digits = raw.replace(/\D/g, "");
+  return digits.length >= 10 && digits.length <= 13;
+};
+
+// "YYYY-MM" → months since year 0, for gap maths.
+const monthValue = (s?: string) => {
+  if (!s) return null;
+  const [y, m] = s.split("-").map(Number);
+  if (!y || !m) return null;
+  return y * 12 + (m - 1);
+};
+const nowMonth = () => {
+  const d = new Date();
+  return d.getFullYear() * 12 + d.getMonth();
+};
+const labelMonth = (mv: number) => `${MONTHS[((mv % 12) + 12) % 12]} ${Math.floor(mv / 12)}`;
+
+const tenYearsAgo = () => {
+  const t = new Date();
+  t.setFullYear(t.getFullYear() - 10);
+  return t;
+};
+const withinTenYears = (dateStr?: string) => {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  return !isNaN(d.getTime()) && d > tenYearsAgo();
+};
+
+type Job = { employer: string; jobTitle: string; from: string; to: string; stillHere: boolean; duties: string; reason: string };
+type PrevAddress = { line1: string; line2: string; city: string; postcode: string; movedIn: string };
+
+const emptyJob = (): Job => ({ employer: "", jobTitle: "", from: "", to: "", stillHere: false, duties: "", reason: "" });
+const emptyAddress = (): PrevAddress => ({ line1: "", line2: "", city: "", postcode: "", movedIn: "" });
 
 const steps: { title: string; intro?: string; fields: Field[] }[] = [
   {
     title: "About you",
     fields: [
-      { name: "title", label: "Title", type: "select", options: ["Mr", "Mrs", "Miss", "Ms", "Dr", "Mx", "Other"] },
+      { name: "title", label: "Title", type: "select", options: ["Mr", "Mrs", "Miss", "Ms", "Dr", "Mx", "Other"], required: true },
       { name: "firstName", label: "First name", required: true },
       { name: "surname", label: "Surname", required: true },
       { name: "otherNames", label: "Any previous names (maiden name / deed poll)", full: true, hint: "Needed for your DBS check — write “None” if this doesn’t apply." },
-      { name: "dob", label: "Date of birth", type: "date" },
+      { name: "dob", label: "Date of birth", type: "date", required: true },
       { name: "email", label: "Email", type: "email", required: true },
       { name: "mobile", label: "Mobile number", type: "tel", required: true, hint: "Numbers only, e.g. 07123 456789" },
       { name: "landline", label: "Home landline (if any)", type: "tel" },
-      { name: "cityOfBirth", label: "Town / city of birth" },
-      { name: "countryOfBirth", label: "Country of birth" },
-      { name: "nationality", label: "Nationality" },
+      { name: "cityOfBirth", label: "Town / city of birth", required: true },
+      { name: "countryOfBirth", label: "Country of birth", required: true },
+      { name: "nationality", label: "Nationality", required: true },
     ],
   },
   {
     title: "Eligibility & availability",
     fields: [
       { name: "rightToWork", label: "Do you have the legal right to work in the UK?", yesno: true, required: true },
-      { name: "drivingLicence", label: "Do you hold a UK/EU driving licence?", yesno: true },
-      { name: "availability", label: "Are you applying for…", type: "select", options: ["Full time", "Part time", "Either"] },
-      { name: "earliestStart", label: "Earliest date you can start", type: "date" },
-      { name: "shifts", label: "Preferred shift hours", type: "shifts", full: true },
-      { name: "areas", label: "Preferred areas of work", type: "areas", full: true },
+      { name: "drivingLicence", label: "Do you hold a UK/EU driving licence?", yesno: true, required: true },
+      { name: "availability", label: "Are you applying for…", type: "select", options: ["Full time", "Part time", "Either"], required: true },
+      { name: "earliestStart", label: "Earliest date you can start", type: "date", required: true },
+      { name: "shifts", label: "Preferred shift hours", type: "shifts", full: true, required: true },
+      { name: "areas", label: "Preferred areas of work", type: "areas", full: true, required: true },
     ],
   },
   {
     title: "Address history",
-    intro: "We need your addresses covering the last 10 years for your DBS check. Start with where you live now.",
+    intro: "We need your addresses covering the last 10 years for your DBS check. Start with where you live now. If you moved in less than 10 years ago, we’ll ask for your previous address too.",
     fields: [
       { name: "_h1", label: "Current home address", type: "heading", full: true },
       { name: "address1Line1", label: "Address line 1", required: true, full: true },
       { name: "address1Line2", label: "Address line 2", full: true },
-      { name: "address1City", label: "Town / City" },
-      { name: "address1Postcode", label: "Postcode", required: true },
-      { name: "address1Date", label: "Date you moved in", type: "month" },
+      { name: "address1City", label: "Town / City", required: true },
+      { name: "address1Postcode", label: "Postcode", type: "postcode", required: true },
+      { name: "address1Date", label: "Date you moved in", type: "date", required: true, full: true },
       { name: "prevAddresses", label: "Previous addresses", type: "addresses", full: true },
     ],
   },
   {
     title: "Employment history",
-    intro: "Start with your most recent job and work backwards, covering the last 10 years. Month & year is fine — you don’t need exact days.",
+    intro: "Start with your most recent job and work backwards, covering the last 10 years. Month & year is fine. If there are any gaps between your jobs, we’ll ask you to explain them below.",
     fields: [
-      { name: "jobs", label: "Jobs", type: "jobs", full: true },
-      { name: "_gapsHead", label: "Employment gaps (last 10 years)", type: "heading", full: true },
-      { name: "_gapsNote", label: "Please explain any period in the last 10 years when you were not working — for example caring for a family member, raising children, travel, illness, study or unemployment. Add “None” if this doesn’t apply.", type: "note", full: true },
+      { name: "jobs", label: "Jobs", type: "jobs", full: true, required: true },
       { name: "gaps", label: "Gaps", type: "gaps", full: true },
     ],
   },
   {
     title: "Care experience",
     fields: [
-      { name: "careExperience", label: "Tell us about any previous care experience (paid or unpaid)", type: "textarea", full: true, hint: "It’s fine if you have none — just tell us a little about yourself." },
-      { name: "familyCare", label: "Have you ever cared for a family member or friend, even if unpaid?", yesno: true, full: true },
-      { name: "familyCareDetails", label: "Please tell us a little about the care you gave", type: "textarea", full: true, showIf: (v) => v.familyCare === "Yes" },
-      { name: "whyCarer", label: "Why do you want to work in care?", type: "textarea", full: true },
+      { name: "careExperience", label: "Tell us about any previous care experience (paid or unpaid)", type: "textarea", full: true, required: true, hint: "It’s fine if you have none — just tell us a little about yourself." },
+      { name: "familyCare", label: "Have you ever cared for a family member or friend, even if unpaid?", yesno: true, full: true, required: true },
+      { name: "familyCareDetails", label: "Please tell us a little about the care you gave", type: "textarea", full: true, required: true, showIf: (v) => v.familyCare === "Yes" },
+      { name: "whyCarer", label: "Why do you want to work in care?", type: "textarea", full: true, required: true },
     ],
   },
   {
     title: "Qualifications, training & languages",
     intro: "We don’t need your school or college dates — just what’s relevant to care.",
     fields: [
-      { name: "mostRecentEducation", label: "Most recent education / qualification", full: true, hint: "e.g. GCSEs, BTEC, NVQ, degree — whatever your highest / most recent is." },
-      { name: "educationCounty", label: "Which county was this completed in?" },
-      { name: "qualifications", label: "Relevant qualifications & certificates", type: "textarea", full: true, hint: "e.g. Care Certificate, NVQ / Diploma in Health & Social Care, first aid, moving & handling." },
+      { name: "mostRecentEducation", label: "Most recent education / qualification", full: true, required: true, hint: "e.g. GCSEs, BTEC, NVQ, degree — whatever your highest / most recent is." },
+      { name: "educationCounty", label: "Which county was this completed in?", required: true },
+      { name: "qualifications", label: "Relevant qualifications & certificates", type: "textarea", full: true, required: true, hint: "e.g. Care Certificate, NVQ / Diploma in Health & Social Care, first aid, moving & handling. Write “None yet” if you have none." },
       { name: "otherTraining", label: "Any other relevant training", type: "textarea", full: true },
-      { name: "languages", label: "Languages you speak", full: true, hint: "Please say whether fluent or conversational." },
+      { name: "languages", label: "Languages you speak", type: "languages", full: true, required: true },
     ],
   },
   {
@@ -178,27 +228,27 @@ const steps: { title: string; intro?: string; fields: Field[] }[] = [
       { name: "_r1", label: "Reference 1 — current / most recent employer", type: "heading", full: true },
       { name: "ref1Name", label: "Full name", required: true },
       { name: "ref1Position", label: "Job title / position" },
-      { name: "ref1Org", label: "Organisation" },
-      { name: "ref1Relationship", label: "Relationship to you" },
-      { name: "ref1Email", label: "Email", type: "email" },
-      { name: "ref1Phone", label: "Telephone", type: "tel" },
+      { name: "ref1Org", label: "Organisation", required: true },
+      { name: "ref1Relationship", label: "Relationship to you", required: true },
+      { name: "ref1Email", label: "Email", type: "email", required: true },
+      { name: "ref1Phone", label: "Telephone", type: "tel", required: true },
       { name: "_r2", label: "Reference 2 — previous employer, or a character referee", type: "heading", full: true },
-      { name: "ref2Name", label: "Full name" },
+      { name: "ref2Name", label: "Full name", required: true },
       { name: "ref2Position", label: "Job title / position" },
       { name: "ref2Org", label: "Organisation" },
-      { name: "ref2Relationship", label: "Relationship to you" },
-      { name: "ref2Email", label: "Email", type: "email" },
-      { name: "ref2Phone", label: "Telephone", type: "tel" },
+      { name: "ref2Relationship", label: "Relationship to you", required: true },
+      { name: "ref2Email", label: "Email", type: "email", required: true },
+      { name: "ref2Phone", label: "Telephone", type: "tel", required: true },
     ],
   },
   {
     title: "Next of kin",
     intro: "Someone we can contact in an emergency.",
     fields: [
-      { name: "nokName", label: "Full name" },
-      { name: "nokRelationship", label: "Relationship to you" },
-      { name: "nokAddress", label: "Address", type: "textarea", full: true },
-      { name: "nokMobile", label: "Mobile number", type: "tel" },
+      { name: "nokName", label: "Full name", required: true },
+      { name: "nokRelationship", label: "Relationship to you", required: true },
+      { name: "nokAddress", label: "Address", type: "textarea", full: true, required: true },
+      { name: "nokMobile", label: "Mobile number", type: "tel", required: true },
       { name: "nokEmail", label: "Email", type: "email" },
     ],
   },
@@ -206,19 +256,19 @@ const steps: { title: string; intro?: string; fields: Field[] }[] = [
     title: "Health declaration",
     intro: "Care work can be physically and emotionally demanding. This helps us make sure you’re supported and any reasonable adjustments are in place.",
     fields: [
-      { name: "sickDays", label: "Days absent through sickness in the last 12 months", type: "tel" },
-      { name: "healthCondition", label: "Do you have any physical or mental health condition that may affect your ability to carry out this role (with reasonable adjustments)?", yesno: true, full: true },
-      { name: "healthDetails", label: "Please give brief details, so we can support you", type: "textarea", full: true, showIf: (v) => v.healthCondition === "Yes" },
+      { name: "sickDays", label: "Days absent through sickness in the last 12 months", type: "number", required: true },
+      { name: "healthCondition", label: "Do you have any physical or mental health condition that may affect your ability to carry out this role (with reasonable adjustments)?", yesno: true, full: true, required: true },
+      { name: "healthDetails", label: "Please give brief details, so we can support you", type: "textarea", full: true, required: true, showIf: (v) => v.healthCondition === "Yes" },
     ],
   },
   {
     title: "Criminal record declaration",
     intro: "This role is exempt from the Rehabilitation of Offenders Act 1974. An Enhanced DBS check (with a check of the barred lists) is required, so you must declare all cautions and convictions — including any that would normally be “spent”. A criminal record will not necessarily bar you from working with us.",
     fields: [
-      { name: "convictionCaution", label: "Have you ever been convicted of, or cautioned for, any criminal offence?", yesno: true, full: true },
-      { name: "barredList", label: "Are you on a barred list, or otherwise prohibited from working with children or adults?", yesno: true, full: true },
-      { name: "convictionDetails", label: "If you answered Yes above, please give brief details", type: "textarea", full: true, showIf: (v) => v.convictionCaution === "Yes" || v.barredList === "Yes" },
-      { name: "dbsConsent", label: "Do you consent to an Enhanced DBS check being carried out?", yesno: true, full: true },
+      { name: "convictionCaution", label: "Have you ever been convicted of, or cautioned for, any criminal offence?", yesno: true, full: true, required: true },
+      { name: "barredList", label: "Are you on a barred list, or otherwise prohibited from working with children or adults?", yesno: true, full: true, required: true },
+      { name: "convictionDetails", label: "If you answered Yes above, please give brief details", type: "textarea", full: true, required: true, showIf: (v) => v.convictionCaution === "Yes" || v.barredList === "Yes" },
+      { name: "dbsConsent", label: "Do you consent to an Enhanced DBS check being carried out?", yesno: true, full: true, required: true },
     ],
   },
   {
@@ -239,6 +289,8 @@ const steps: { title: string; intro?: string; fields: Field[] }[] = [
   },
 ];
 
+const REF_STEP = steps.findIndex((s) => s.fields.some((f) => f.name === "ref1Name"));
+
 const inputCls =
   "w-full rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-brand-900 placeholder-brand-900/40 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200";
 
@@ -249,34 +301,23 @@ const pillCls = (on: boolean) =>
       : "border border-brand-200 bg-white text-brand-800 hover:bg-brand-50"
   }`;
 
-// Keep only characters valid in a phone number: digits, spaces, and a leading +.
 function sanitisePhone(raw: string) {
   const plus = raw.trim().startsWith("+") ? "+" : "";
   return plus + raw.replace(/[^\d]/g, "");
 }
 
-// A UK-ish sanity check: 10–13 digits once symbols are stripped.
-function isValidPhone(raw: string) {
-  const digits = raw.replace(/\D/g, "");
-  return digits.length >= 10 && digits.length <= 13;
-}
-
-type Job = { employer: string; jobTitle: string; from: string; to: string; duties: string; reason: string };
-type PrevAddress = { address: string; from: string; to: string };
-type Gap = { from: string; to: string; reason: string };
+const REQUIRED = "This field is required.";
 
 export default function ApplicationForm() {
   const [step, setStep] = useState(0);
   const [values, setValues] = useState<Record<string, string>>({});
   const [areas, setAreas] = useState<string[]>([]);
   const [shifts, setShifts] = useState<string[]>([]);
-  const [prevAddresses, setPrevAddresses] = useState<PrevAddress[]>([
-    { address: "", from: "", to: "" },
-  ]);
-  const [jobs, setJobs] = useState<Job[]>([
-    { employer: "", jobTitle: "", from: "", to: "", duties: "", reason: "" },
-  ]);
-  const [gaps, setGaps] = useState<Gap[]>([{ from: "", to: "", reason: "" }]);
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [langInput, setLangInput] = useState("");
+  const [prevAddresses, setPrevAddresses] = useState<PrevAddress[]>([emptyAddress()]);
+  const [jobs, setJobs] = useState<Job[]>([emptyJob()]);
+  const [gapReasons, setGapReasons] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const formRef = useRef<HTMLDivElement>(null);
@@ -287,35 +328,125 @@ export default function ApplicationForm() {
   const toTop = () =>
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
+  // Pre-fill Reference 1's organisation from the most recent job.
+  useEffect(() => {
+    if (step === REF_STEP && !values.ref1Org && jobs[0]?.employer) {
+      set("ref1Org", jobs[0].employer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  // ——— Address history: how many previous addresses to show (10-year chain) ———
+  const visiblePrevCount = () => {
+    if (!withinTenYears(values.address1Date)) return 0;
+    let n = 1;
+    while (n <= prevAddresses.length && withinTenYears(prevAddresses[n - 1]?.movedIn)) n++;
+    return n;
+  };
+
+  // ——— Employment: work out uncovered periods in the last 10 years ———
+  const computeGaps = () => {
+    const now = nowMonth();
+    const windowStart = now - 120;
+    const ivs = jobs
+      .map((j) => {
+        const f = monthValue(j.from);
+        const t = j.stillHere ? now : monthValue(j.to);
+        if (f == null || t == null) return null;
+        return [Math.min(f, t), Math.max(f, t)] as [number, number];
+      })
+      .filter((x): x is [number, number] => x !== null && x[1] >= windowStart)
+      .sort((a, b) => a[0] - b[0]);
+
+    const gaps: { key: string; label: string }[] = [];
+    let cursor = windowStart;
+    for (const [a, b] of ivs) {
+      if (a - cursor >= 2) {
+        gaps.push({ key: `${cursor}-${a}`, label: `Between ${labelMonth(cursor)} and ${labelMonth(a)}` });
+      }
+      cursor = Math.max(cursor, b);
+    }
+    if (now - cursor >= 2) {
+      gaps.push({ key: `${cursor}-${now}`, label: `Between ${labelMonth(cursor)} and now` });
+    }
+    return gaps;
+  };
+  // Only meaningful once the most recent job has real dates.
+  const gapsReady = () => jobs.some((j) => monthValue(j.from) != null && (j.stillHere || monthValue(j.to) != null));
+
   const visibleFields = () =>
     steps[step].fields.filter((f) => !f.showIf || f.showIf(values));
-
-  const skipValidation = new Set([
-    "heading",
-    "note",
-    "consent",
-    "areas",
-    "shifts",
-    "addresses",
-    "jobs",
-    "gaps",
-  ]);
 
   const validateStep = () => {
     const e: Record<string, string> = {};
     for (const f of visibleFields()) {
-      if (f.type && skipValidation.has(f.type)) continue;
+      if (f.type === "heading" || f.type === "note" || f.type === "consent" || f.type === "gaps") continue;
+
+      if (f.type === "areas" || f.type === "shifts" || f.type === "languages") {
+        const sel = f.type === "areas" ? areas : f.type === "shifts" ? shifts : languages;
+        if (f.required && sel.length === 0) e[f.name] = "Please choose at least one.";
+        continue;
+      }
+      if (f.type === "addresses") {
+        validateAddresses(e);
+        continue;
+      }
+      if (f.type === "jobs") {
+        validateJobs(e);
+        continue;
+      }
+
       const v = (values[f.name] ?? "").trim();
-      if (f.required && !v) e[f.name] = "This field is required.";
-      if (f.type === "email" && v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))
+      if (f.required && !v) {
+        e[f.name] = REQUIRED;
+        continue;
+      }
+      if (!v) continue;
+      if (f.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))
         e[f.name] = "Please enter a valid email address.";
-      if (f.name === "mobile" && v && !isValidPhone(v))
-        e[f.name] = "Please enter a valid mobile number (digits only).";
+      if (f.type === "postcode" && !isPostcode(v))
+        e[f.name] = "Please enter a valid UK postcode.";
+      if (f.type === "tel" && !isValidPhone(v))
+        e[f.name] = "Please enter a valid phone number (digits only).";
+      if (f.type === "number" && !/^\d+$/.test(v))
+        e[f.name] = "Please enter a number.";
     }
+
     if (step === steps.length - 1 && values.consent !== "yes")
       e.consent = "Please confirm the declaration to submit.";
+
     setErrors(e);
+    if (Object.keys(e).length > 0) toTop();
     return Object.keys(e).length === 0;
+  };
+
+  const validateAddresses = (e: Record<string, string>) => {
+    const shown = visiblePrevCount();
+    for (let i = 0; i < shown; i++) {
+      const a = prevAddresses[i] ?? emptyAddress();
+      if (!a.line1.trim()) e[`prev${i}Line1`] = REQUIRED;
+      if (!a.city.trim()) e[`prev${i}City`] = REQUIRED;
+      if (!a.postcode.trim()) e[`prev${i}Postcode`] = REQUIRED;
+      else if (!isPostcode(a.postcode)) e[`prev${i}Postcode`] = "Enter a valid UK postcode.";
+      if (!a.movedIn) e[`prev${i}MovedIn`] = REQUIRED;
+    }
+  };
+
+  const validateJobs = (e: Record<string, string>) => {
+    jobs.forEach((j, i) => {
+      const filledAny = j.employer || j.jobTitle || j.from || j.to || j.duties || j.reason;
+      if (i === 0 || filledAny) {
+        if (!j.employer.trim()) e[`job${i}Employer`] = REQUIRED;
+        if (!j.jobTitle.trim()) e[`job${i}JobTitle`] = REQUIRED;
+        if (!j.from) e[`job${i}From`] = REQUIRED;
+        if (!j.stillHere && !j.to) e[`job${i}To`] = REQUIRED;
+      }
+    });
+    if (gapsReady()) {
+      for (const g of computeGaps()) {
+        if (!(gapReasons[g.key] ?? "").trim()) e[`gap_${g.key}`] = "Please explain this period.";
+      }
+    }
   };
 
   const next = () => {
@@ -343,25 +474,27 @@ export default function ApplicationForm() {
       .filter(Boolean)
       .join(", ");
 
+    const shown = visiblePrevCount();
     const prevAddressesText = prevAddresses
-      .filter((a) => a.address || a.from || a.to)
-      .map((a) => `${a.address || "—"} (${a.from || "?"} → ${a.to || "?"})`)
+      .slice(0, Math.max(shown, prevAddresses.filter((a) => a.line1 || a.postcode).length))
+      .filter((a) => a.line1 || a.postcode || a.movedIn)
+      .map((a) => `${[a.line1, a.line2, a.city, a.postcode].filter(Boolean).join(", ")} (moved in ${a.movedIn || "?"})`)
       .join("\n");
 
     const jobsText = jobs
       .filter((j) => j.employer || j.jobTitle || j.duties)
       .map(
         (j, i) =>
-          `${i + 1}. ${j.jobTitle || "—"} at ${j.employer || "—"} (${j.from || "?"} → ${j.to || "present"})\n   Duties: ${j.duties || "—"}\n   Reason for leaving: ${j.reason || "—"}`
+          `${i + 1}. ${j.jobTitle || "—"} at ${j.employer || "—"} (${j.from || "?"} → ${j.stillHere ? "present" : j.to || "?"})\n   Duties: ${j.duties || "—"}\n   Reason for leaving: ${j.stillHere ? "Still employed" : j.reason || "—"}`
       )
       .join("\n\n");
 
-    const gapsText = gaps
-      .filter((g) => g.from || g.to || g.reason)
-      .map((g) => `${g.from || "?"} → ${g.to || "?"}: ${g.reason || "—"}`)
-      .join("\n");
+    const gapsText = gapsReady()
+      ? computeGaps()
+          .map((g) => `${g.label}: ${gapReasons[g.key] || "—"}`)
+          .join("\n") || "None"
+      : "";
 
-    // Resolve "Other (please specify)" style choices to their free-text value.
     const resolve = (name: string) => {
       const v = values[name] ?? "";
       const other = (values[`${name}Other`] ?? "").trim();
@@ -372,6 +505,7 @@ export default function ApplicationForm() {
       ...values,
       areas: areas.join(", "),
       shiftHours: shifts.join(", "),
+      languages: languages.join(", "),
       address1: currentAddress,
       prevAddresses: prevAddressesText,
       jobs: jobsText,
@@ -428,6 +562,12 @@ export default function ApplicationForm() {
   const current = steps[step];
   const pct = Math.round(((step + 1) / steps.length) * 100);
 
+  const addLanguage = (lang: string) => {
+    const v = lang.trim();
+    if (!v) return;
+    setLanguages((prev) => (prev.some((l) => l.toLowerCase() === v.toLowerCase()) ? prev : [...prev, v]));
+  };
+
   const renderField = (f: Field) => {
     if (f.showIf && !f.showIf(values)) return null;
 
@@ -450,6 +590,7 @@ export default function ApplicationForm() {
     if (f.type === "addresses") return renderPrevAddresses();
     if (f.type === "jobs") return renderJobs();
     if (f.type === "gaps") return renderGaps();
+    if (f.type === "languages") return renderLanguages(f);
 
     if (f.type === "areas" || f.type === "shifts") {
       const opts = f.type === "areas" ? site.areas : SHIFT_OPTIONS;
@@ -457,7 +598,9 @@ export default function ApplicationForm() {
       const setSel = f.type === "areas" ? setAreas : setShifts;
       return (
         <fieldset key={f.name} className="sm:col-span-2">
-          <legend className="text-sm font-semibold text-brand-900">{f.label}</legend>
+          <legend className="text-sm font-semibold text-brand-900">
+            {f.label} {f.required && <span className="text-accent-600">*</span>}
+          </legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {opts.map((o) => {
               const on = sel.includes(o);
@@ -476,6 +619,7 @@ export default function ApplicationForm() {
               );
             })}
           </div>
+          {errors[f.name] && <p className="mt-1.5 text-sm text-accent-600">{errors[f.name]}</p>}
         </fieldset>
       );
     }
@@ -591,8 +735,17 @@ export default function ApplicationForm() {
             onChange={(e) => set(f.name, sanitisePhone(e.target.value))}
             className={`mt-1.5 ${inputCls}`}
           />
+        ) : f.type === "number" ? (
+          <input
+            id={f.name}
+            type="text"
+            inputMode="numeric"
+            value={values[f.name] ?? ""}
+            onChange={(e) => set(f.name, e.target.value.replace(/[^\d]/g, ""))}
+            className={`mt-1.5 ${inputCls}`}
+          />
         ) : (
-          <input id={f.name} type={f.type ?? "text"} value={values[f.name] ?? ""} onChange={(e) => set(f.name, e.target.value)} className={`mt-1.5 ${inputCls}`} />
+          <input id={f.name} type={f.type === "postcode" ? "text" : f.type ?? "text"} value={values[f.name] ?? ""} onChange={(e) => set(f.name, e.target.value)} className={`mt-1.5 ${inputCls}`} />
         )}
         {f.hint && !errors[f.name] && <p className="mt-1 text-xs text-brand-900/50">{f.hint}</p>}
         {errors[f.name] && <p className="mt-1 text-sm text-accent-600">{errors[f.name]}</p>}
@@ -600,55 +753,60 @@ export default function ApplicationForm() {
     );
   };
 
-  // ——— Repeatable: previous addresses (10-year history) ———
+  // ——— Repeatable: previous addresses (chained to cover 10 years) ———
   function renderPrevAddresses() {
+    const shown = visiblePrevCount();
+    if (shown === 0) return null;
     const update = (i: number, key: keyof PrevAddress, val: string) =>
-      setPrevAddresses((arr) => arr.map((x, j) => (j === i ? { ...x, [key]: val } : x)));
+      setPrevAddresses((arr) => {
+        const copy = arr.slice();
+        while (copy.length <= i) copy.push(emptyAddress());
+        copy[i] = { ...copy[i], [key]: val };
+        return copy;
+      });
     return (
       <div key="prevAddresses" className="sm:col-span-2 space-y-4">
-        {prevAddresses.map((a, i) => (
-          <div key={i} className="rounded-2xl bg-sand p-4">
-            <div className="flex items-center justify-between">
+        <h3 className="border-b border-brand-100 pb-2 text-sm font-bold uppercase tracking-wide text-brand-700">
+          Previous addresses
+        </h3>
+        {Array.from({ length: shown }).map((_, i) => {
+          const a = prevAddresses[i] ?? emptyAddress();
+          return (
+            <div key={i} className="rounded-2xl bg-sand p-4">
               <p className="text-sm font-semibold text-brand-900">Previous address {i + 1}</p>
-              {prevAddresses.length > 1 && (
-                <button type="button" onClick={() => setPrevAddresses((arr) => arr.filter((_, j) => j !== i))} className="text-sm font-semibold text-brand-700 hover:text-brand-900">
-                  Remove
-                </button>
-              )}
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <input value={a.line1} onChange={(e) => update(i, "line1", e.target.value)} placeholder="Address line 1 *" className={inputCls} />
+                  {errors[`prev${i}Line1`] && <p className="mt-1 text-sm text-accent-600">{errors[`prev${i}Line1`]}</p>}
+                </div>
+                <input value={a.line2} onChange={(e) => update(i, "line2", e.target.value)} placeholder="Address line 2" className={`sm:col-span-2 ${inputCls}`} />
+                <div>
+                  <input value={a.city} onChange={(e) => update(i, "city", e.target.value)} placeholder="Town / City *" className={inputCls} />
+                  {errors[`prev${i}City`] && <p className="mt-1 text-sm text-accent-600">{errors[`prev${i}City`]}</p>}
+                </div>
+                <div>
+                  <input value={a.postcode} onChange={(e) => update(i, "postcode", e.target.value)} placeholder="Postcode *" className={inputCls} />
+                  {errors[`prev${i}Postcode`] && <p className="mt-1 text-sm text-accent-600">{errors[`prev${i}Postcode`]}</p>}
+                </div>
+                <label className="text-xs font-semibold text-brand-900/70 sm:col-span-2">
+                  Date you moved in *
+                  <input type="date" value={a.movedIn} onChange={(e) => update(i, "movedIn", e.target.value)} className={`mt-1 ${inputCls}`} />
+                  {errors[`prev${i}MovedIn`] && <p className="mt-1 text-sm text-accent-600">{errors[`prev${i}MovedIn`]}</p>}
+                </label>
+              </div>
             </div>
-            <textarea
-              rows={2}
-              value={a.address}
-              onChange={(e) => update(i, "address", e.target.value)}
-              placeholder="Address & postcode"
-              className={`mt-2 ${inputCls}`}
-            />
-            <div className="mt-2 grid gap-2 sm:grid-cols-2">
-              <label className="text-xs font-semibold text-brand-900/70">
-                From
-                <input type="month" value={a.from} onChange={(e) => update(i, "from", e.target.value)} className={`mt-1 ${inputCls}`} />
-              </label>
-              <label className="text-xs font-semibold text-brand-900/70">
-                To
-                <input type="month" value={a.to} onChange={(e) => update(i, "to", e.target.value)} className={`mt-1 ${inputCls}`} />
-              </label>
-            </div>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={() => setPrevAddresses((arr) => [...arr, { address: "", from: "", to: "" }])}
-          className="text-sm font-semibold text-brand-700 hover:text-brand-900"
-        >
-          + Add another address
-        </button>
+          );
+        })}
+        <p className="text-xs text-brand-900/50">
+          Keep going until your addresses reach back at least 10 years. A new address box appears whenever the last move-in date is under 10 years ago.
+        </p>
       </div>
     );
   }
 
   // ——— Repeatable: employment history ———
   function renderJobs() {
-    const update = (i: number, key: keyof Job, val: string) =>
+    const update = (i: number, key: keyof Job, val: string | boolean) =>
       setJobs((arr) => arr.map((x, j) => (j === i ? { ...x, [key]: val } : x)));
     return (
       <div key="jobs" className="sm:col-span-2 space-y-4">
@@ -665,24 +823,43 @@ export default function ApplicationForm() {
               )}
             </div>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
-              <input value={job.employer} onChange={(e) => update(i, "employer", e.target.value)} placeholder="Employer name" className={inputCls} />
-              <input value={job.jobTitle} onChange={(e) => update(i, "jobTitle", e.target.value)} placeholder="Job title" className={inputCls} />
+              <div>
+                <input value={job.employer} onChange={(e) => update(i, "employer", e.target.value)} placeholder="Employer name *" className={inputCls} />
+                {errors[`job${i}Employer`] && <p className="mt-1 text-sm text-accent-600">{errors[`job${i}Employer`]}</p>}
+              </div>
+              <div>
+                <input value={job.jobTitle} onChange={(e) => update(i, "jobTitle", e.target.value)} placeholder="Job title *" className={inputCls} />
+                {errors[`job${i}JobTitle`] && <p className="mt-1 text-sm text-accent-600">{errors[`job${i}JobTitle`]}</p>}
+              </div>
               <label className="text-xs font-semibold text-brand-900/70">
-                From
+                From (month / year) *
                 <input type="month" value={job.from} onChange={(e) => update(i, "from", e.target.value)} className={`mt-1 ${inputCls}`} />
+                {errors[`job${i}From`] && <p className="mt-1 text-sm text-accent-600">{errors[`job${i}From`]}</p>}
               </label>
               <label className="text-xs font-semibold text-brand-900/70">
-                To
-                <input type="month" value={job.to} onChange={(e) => update(i, "to", e.target.value)} className={`mt-1 ${inputCls}`} />
+                To (month / year) {!job.stillHere && "*"}
+                <input type="month" value={job.to} disabled={job.stillHere} onChange={(e) => update(i, "to", e.target.value)} className={`mt-1 ${inputCls} ${job.stillHere ? "opacity-50" : ""}`} />
+                {errors[`job${i}To`] && <p className="mt-1 text-sm text-accent-600">{errors[`job${i}To`]}</p>}
               </label>
             </div>
+            <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand-800">
+              <input
+                type="checkbox"
+                checked={job.stillHere}
+                onChange={(e) => update(i, "stillHere", e.target.checked)}
+                className="h-4 w-4 accent-brand-600"
+              />
+              I still work here
+            </label>
             <textarea rows={2} value={job.duties} onChange={(e) => update(i, "duties", e.target.value)} placeholder="Main duties" className={`mt-2 ${inputCls}`} />
-            <input value={job.reason} onChange={(e) => update(i, "reason", e.target.value)} placeholder="Reason for leaving" className={`mt-2 ${inputCls}`} />
+            {!job.stillHere && (
+              <input value={job.reason} onChange={(e) => update(i, "reason", e.target.value)} placeholder="Reason for leaving" className={`mt-2 ${inputCls}`} />
+            )}
           </div>
         ))}
         <button
           type="button"
-          onClick={() => setJobs((arr) => [...arr, { employer: "", jobTitle: "", from: "", to: "", duties: "", reason: "" }])}
+          onClick={() => setJobs((arr) => [...arr, emptyJob()])}
           className="text-sm font-semibold text-brand-700 hover:text-brand-900"
         >
           + Add another job
@@ -691,42 +868,100 @@ export default function ApplicationForm() {
     );
   }
 
-  // ——— Repeatable: employment gaps ———
+  // ——— Auto-detected employment gaps (each needs a reason) ———
   function renderGaps() {
-    const update = (i: number, key: keyof Gap, val: string) =>
-      setGaps((arr) => arr.map((x, j) => (j === i ? { ...x, [key]: val } : x)));
+    if (!gapsReady()) return null;
+    const gaps = computeGaps();
     return (
-      <div key="gaps" className="sm:col-span-2 space-y-4">
-        {gaps.map((g, i) => (
-          <div key={i} className="rounded-2xl bg-sand p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-brand-900">Gap {i + 1}</p>
-              {gaps.length > 1 && (
-                <button type="button" onClick={() => setGaps((arr) => arr.filter((_, j) => j !== i))} className="text-sm font-semibold text-brand-700 hover:text-brand-900">
-                  Remove
+      <div key="gaps" className="sm:col-span-2 space-y-3">
+        <h3 className="border-b border-brand-100 pb-2 text-sm font-bold uppercase tracking-wide text-brand-700">
+          Employment gaps
+        </h3>
+        {gaps.length === 0 ? (
+          <p className="rounded-2xl bg-brand-50 p-4 text-sm text-brand-900/70">
+            ✓ Your dates cover the last 10 years with no gaps to explain.
+          </p>
+        ) : (
+          <>
+            <p className="text-sm text-brand-900/70">
+              We spotted {gaps.length === 1 ? "a period" : "some periods"} when you weren’t in a job. Please tell us why — for example maternity leave, studying, caring for family, travelling, or looking for work.
+            </p>
+            {gaps.map((g) => (
+              <div key={g.key} className="rounded-2xl bg-sand p-4">
+                <p className="text-sm font-semibold text-brand-900">{g.label}</p>
+                <textarea
+                  rows={2}
+                  value={gapReasons[g.key] ?? ""}
+                  onChange={(e) => setGapReasons((prev) => ({ ...prev, [g.key]: e.target.value }))}
+                  placeholder="Why weren’t you working during this time?"
+                  className={`mt-2 ${inputCls}`}
+                />
+                {errors[`gap_${g.key}`] && <p className="mt-1 text-sm text-accent-600">{errors[`gap_${g.key}`]}</p>}
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // ——— Languages: quick-pick chips + free-text add ———
+  function renderLanguages(f: Field) {
+    return (
+      <div key="languages" className="sm:col-span-2">
+        <span className="block text-sm font-semibold text-brand-900">
+          {f.label} {f.required && <span className="text-accent-600">*</span>}
+        </span>
+        <p className="mt-1 text-xs text-brand-900/50">
+          Tap the ones you speak, or type another and press Enter to add it.
+        </p>
+
+        {languages.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {languages.map((l) => (
+              <span key={l} className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white">
+                {l}
+                <button
+                  type="button"
+                  aria-label={`Remove ${l}`}
+                  onClick={() => setLanguages((prev) => prev.filter((x) => x !== l))}
+                  className="text-white/80 hover:text-white"
+                >
+                  ✕
                 </button>
-              )}
-            </div>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2">
-              <label className="text-xs font-semibold text-brand-900/70">
-                From
-                <input type="month" value={g.from} onChange={(e) => update(i, "from", e.target.value)} className={`mt-1 ${inputCls}`} />
-              </label>
-              <label className="text-xs font-semibold text-brand-900/70">
-                To
-                <input type="month" value={g.to} onChange={(e) => update(i, "to", e.target.value)} className={`mt-1 ${inputCls}`} />
-              </label>
-            </div>
-            <textarea rows={2} value={g.reason} onChange={(e) => update(i, "reason", e.target.value)} placeholder="Why were you not working at this time? (e.g. caring for family, travel, illness, study)" className={`mt-2 ${inputCls}`} />
+              </span>
+            ))}
           </div>
-        ))}
-        <button
-          type="button"
-          onClick={() => setGaps((arr) => [...arr, { from: "", to: "", reason: "" }])}
-          className="text-sm font-semibold text-brand-700 hover:text-brand-900"
-        >
-          + Add another gap
-        </button>
+        )}
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          {POPULAR_LANGUAGES.filter((l) => !languages.some((x) => x.toLowerCase() === l.toLowerCase())).map((l) => (
+            <button
+              type="button"
+              key={l}
+              onClick={() => addLanguage(l)}
+              className="rounded-full border border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-brand-800 hover:bg-brand-50"
+            >
+              + {l}
+            </button>
+          ))}
+        </div>
+
+        <input
+          type="text"
+          value={langInput}
+          onChange={(e) => setLangInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === ",") {
+              e.preventDefault();
+              addLanguage(langInput);
+              setLangInput("");
+            }
+          }}
+          placeholder="Type another language, then press Enter"
+          className={`mt-3 ${inputCls}`}
+        />
+        {errors.languages && <p className="mt-1 text-sm text-accent-600">{errors.languages}</p>}
       </div>
     );
   }
