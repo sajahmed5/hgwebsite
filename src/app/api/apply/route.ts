@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendFormEmail, type EmailField } from "@/lib/email";
+import { saveApplication } from "@/lib/db";
 
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
@@ -166,15 +167,21 @@ export async function POST(request: Request) {
     }
   }
 
-  const { ok } = await sendFormEmail({
-    subject: `New job application — ${firstName} ${surname}`,
-    replyTo: email,
-    fields,
-  });
+  // Save to the database (primary record) and email the team (notification).
+  // Run both so one failing doesn't lose the application.
+  const [saved, emailed] = await Promise.all([
+    saveApplication(data),
+    sendFormEmail({
+      subject: `New job application — ${firstName} ${surname}`,
+      replyTo: email,
+      fields,
+    }),
+  ]);
 
-  if (!ok) {
+  // Only fail the submission if the application wasn't captured anywhere.
+  if (!saved.ok && !emailed.ok) {
     return NextResponse.json(
-      { error: "Could not send right now. Please try again or email us." },
+      { error: "Could not submit right now. Please try again or email us." },
       { status: 502 }
     );
   }
