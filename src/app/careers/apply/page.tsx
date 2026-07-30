@@ -6,7 +6,7 @@ import ApplicationForm from "@/components/ApplicationForm";
 export const metadata: Metadata = {
   title: "Apply to join us",
   description:
-    "Apply to join HG Care online. A few short steps — personal details, experience, employment history and references. No experience needed; full training provided.",
+    "Apply to join HG Care online. Personal details, address & employment history, references and the safe-recruitment checks we need as a regulated care provider. No experience needed; full training provided.",
 };
 
 export default function ApplyPage() {
@@ -15,7 +15,7 @@ export default function ApplyPage() {
       <PageHeader
         eyebrow="Job application"
         title="Apply to join HG Care"
-        subtitle="Fill in the steps below — it won't take long, and there are no tricky tests. No experience is needed; we provide full, paid training."
+        subtitle="Fill in the steps below — one short section at a time, and there are no tricky tests. Some sections are needed for our safe-recruitment (DBS) checks; the last one is voluntary. No experience is needed — we provide full, paid training."
       />
 
       <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
