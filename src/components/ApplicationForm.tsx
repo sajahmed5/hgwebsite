@@ -147,10 +147,10 @@ const withinTenYears = (dateStr?: string) => {
 };
 
 type Job = { employer: string; jobTitle: string; from: string; to: string; stillHere: boolean; duties: string; reason: string };
-type PrevAddress = { line1: string; line2: string; city: string; postcode: string; movedIn: string };
+type PrevAddress = { line1: string; line2: string; city: string; postcode: string; movedIn: string; outside: boolean; country: string };
 
 const emptyJob = (): Job => ({ employer: "", jobTitle: "", from: "", to: "", stillHere: false, duties: "", reason: "" });
-const emptyAddress = (): PrevAddress => ({ line1: "", line2: "", city: "", postcode: "", movedIn: "" });
+const emptyAddress = (): PrevAddress => ({ line1: "", line2: "", city: "", postcode: "", movedIn: "", outside: false, country: "" });
 
 const steps: { title: string; intro?: string; fields: Field[] }[] = [
   {
@@ -182,7 +182,7 @@ const steps: { title: string; intro?: string; fields: Field[] }[] = [
   },
   {
     title: "Address history",
-    intro: "We need your addresses covering the last 10 years for your DBS check. Start with where you live now. If you moved in less than 10 years ago, we’ll ask for your previous address too.",
+    intro: "We need your addresses covering the last 10 years for your DBS check. Start with where you live now. If you moved in less than 10 years ago, we’ll ask for your previous address too. If you lived abroad, tick “outside the UK” — an overseas address is fine, no UK postcode needed.",
     fields: [
       { name: "_h1", label: "Current home address", type: "heading", full: true },
       { name: "address1Line1", label: "Address line 1", required: true, full: true },
@@ -426,8 +426,13 @@ export default function ApplicationForm() {
       const a = prevAddresses[i] ?? emptyAddress();
       if (!a.line1.trim()) e[`prev${i}Line1`] = REQUIRED;
       if (!a.city.trim()) e[`prev${i}City`] = REQUIRED;
-      if (!a.postcode.trim()) e[`prev${i}Postcode`] = REQUIRED;
-      else if (!isPostcode(a.postcode)) e[`prev${i}Postcode`] = "Enter a valid UK postcode.";
+      if (a.outside) {
+        // Overseas address — postcode is optional and not UK-validated.
+        if (!a.country.trim()) e[`prev${i}Country`] = REQUIRED;
+      } else {
+        if (!a.postcode.trim()) e[`prev${i}Postcode`] = REQUIRED;
+        else if (!isPostcode(a.postcode)) e[`prev${i}Postcode`] = "Enter a valid UK postcode.";
+      }
       if (!a.movedIn) e[`prev${i}MovedIn`] = REQUIRED;
     }
   };
@@ -476,9 +481,9 @@ export default function ApplicationForm() {
 
     const shown = visiblePrevCount();
     const prevAddressesText = prevAddresses
-      .slice(0, Math.max(shown, prevAddresses.filter((a) => a.line1 || a.postcode).length))
-      .filter((a) => a.line1 || a.postcode || a.movedIn)
-      .map((a) => `${[a.line1, a.line2, a.city, a.postcode].filter(Boolean).join(", ")} (moved in ${a.movedIn || "?"})`)
+      .slice(0, Math.max(shown, prevAddresses.filter((a) => a.line1 || a.postcode || a.country).length))
+      .filter((a) => a.line1 || a.postcode || a.country || a.movedIn)
+      .map((a) => `${[a.line1, a.line2, a.city, a.postcode, a.outside ? a.country : ""].filter(Boolean).join(", ")} (moved in ${a.movedIn || "?"})`)
       .join("\n");
 
     const jobsText = jobs
@@ -757,7 +762,7 @@ export default function ApplicationForm() {
   function renderPrevAddresses() {
     const shown = visiblePrevCount();
     if (shown === 0) return null;
-    const update = (i: number, key: keyof PrevAddress, val: string) =>
+    const update = (i: number, key: keyof PrevAddress, val: string | boolean) =>
       setPrevAddresses((arr) => {
         const copy = arr.slice();
         while (copy.length <= i) copy.push(emptyAddress());
@@ -774,6 +779,15 @@ export default function ApplicationForm() {
           return (
             <div key={i} className="rounded-2xl bg-sand p-4">
               <p className="text-sm font-semibold text-brand-900">Previous address {i + 1}</p>
+              <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand-800">
+                <input
+                  type="checkbox"
+                  checked={a.outside}
+                  onChange={(e) => update(i, "outside", e.target.checked)}
+                  className="h-4 w-4 accent-brand-600"
+                />
+                This address is outside the UK
+              </label>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                   <input value={a.line1} onChange={(e) => update(i, "line1", e.target.value)} placeholder="Address line 1 *" className={inputCls} />
@@ -785,9 +799,15 @@ export default function ApplicationForm() {
                   {errors[`prev${i}City`] && <p className="mt-1 text-sm text-accent-600">{errors[`prev${i}City`]}</p>}
                 </div>
                 <div>
-                  <input value={a.postcode} onChange={(e) => update(i, "postcode", e.target.value)} placeholder="Postcode *" className={inputCls} />
+                  <input value={a.postcode} onChange={(e) => update(i, "postcode", e.target.value)} placeholder={a.outside ? "Postal / ZIP code (if any)" : "Postcode *"} className={inputCls} />
                   {errors[`prev${i}Postcode`] && <p className="mt-1 text-sm text-accent-600">{errors[`prev${i}Postcode`]}</p>}
                 </div>
+                {a.outside && (
+                  <div className="sm:col-span-2">
+                    <input value={a.country} onChange={(e) => update(i, "country", e.target.value)} placeholder="Country *" className={inputCls} />
+                    {errors[`prev${i}Country`] && <p className="mt-1 text-sm text-accent-600">{errors[`prev${i}Country`]}</p>}
+                  </div>
+                )}
                 <label className="text-xs font-semibold text-brand-900/70 sm:col-span-2">
                   Date you moved in *
                   <input type="date" value={a.movedIn} onChange={(e) => update(i, "movedIn", e.target.value)} className={`mt-1 ${inputCls}`} />
