@@ -44,12 +44,12 @@ export default function CareersPage() {
                 need to do brilliant work and build a career they&apos;re proud
                 of.
               </p>
-              <Link
-                href="/careers/apply"
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent-500 px-6 py-3 font-bold text-white shadow-sm transition-colors hover:bg-accent-600 hover:gap-3"
+              <a
+                href="#apply"
+                className="mt-6 inline-flex items-center gap-2 font-bold text-brand-700 hover:gap-3"
               >
                 Apply today <span aria-hidden>→</span>
-              </Link>
+              </a>
             </div>
           </div>
 

@@ -6,16 +6,12 @@ import { usePathname } from "next/navigation";
 import { nav, site } from "@/data/site";
 import Logo from "./Logo";
 
-// Bright "Apply here" callout with an arrow pointing up at the "We're hiring" button.
+// Small "Apply here" callout that points up at the "We're hiring" button.
 function ApplyHereMarker() {
   return (
-    <span className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full bg-accent-500 px-3.5 py-1.5 text-[13px] font-bold text-white shadow-lg ring-1 ring-black/5 animate-bounce">
-      {/* pointer up towards the button */}
-      <span className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-accent-500" />
-      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="relative">
-        <path d="M12 19V5M6 11l6-6 6 6" />
-      </svg>
-      Apply today
+    <span className="pointer-events-none absolute left-1/2 top-full z-50 mt-1.5 -translate-x-1/2 animate-bounce whitespace-nowrap rounded-full bg-brand-800 px-2.5 py-1 text-[11px] font-semibold text-white shadow-md">
+      <span className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-brand-800" />
+      Apply here
     </span>
   );
 }
@@ -78,7 +74,7 @@ export default function Header() {
           <div className="relative">
             <Link
               href="/careers"
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50"
+              className="inline-flex items-center gap-1.5 rounded-full border border-accent-300 bg-accent-50 px-4 py-2 text-sm font-semibold text-accent-700 transition-colors hover:bg-accent-100"
             >
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-400 opacity-75" />
@@ -107,7 +103,7 @@ export default function Header() {
           <div className="relative">
             <Link
               href="/careers"
-              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-50"
+              className="inline-flex items-center gap-1.5 rounded-full border border-accent-300 bg-accent-50 px-3 py-1.5 text-xs font-semibold text-accent-700"
             >
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-400 opacity-75" />
