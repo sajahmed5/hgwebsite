@@ -20,27 +20,43 @@ export type EmailField =
   | { label: string; value: string; section?: never }
   | { section: string; label?: never; value?: never };
 
+// A file to attach to the email (e.g. the application as a PDF).
+export type EmailAttachment = { filename: string; content: Buffer };
+
 type SendArgs = {
   subject: string;
   // Ordered rows (fields + optional section headings) for the email body.
   fields: EmailField[];
   // Optional reply-to (e.g. the enquirer's email) so staff can just hit reply.
   replyTo?: string;
+  // Extra recipients on top of the default inbox (deduped).
+  extraRecipients?: string[];
+  // Optional file attachments.
+  attachments?: EmailAttachment[];
 };
 
 export async function sendFormEmail({
   subject,
   fields,
   replyTo,
+  extraRecipients = [],
+  attachments = [],
 }: SendArgs): Promise<{ ok: boolean }> {
   const apiKey = process.env.RESEND_API_KEY;
+
+  // Default inbox + any extras, de-duplicated (case-insensitive).
+  const recipients = [toEmail, ...extraRecipients].filter(
+    (email, i, all) =>
+      email && all.findIndex((e) => e.toLowerCase() === email.toLowerCase()) === i
+  );
 
   // No key configured yet → log and succeed so the form still works.
   if (!apiKey) {
     console.log(`📨 [${subject}] (email not configured — logging only)`, {
-      to: toEmail,
+      to: recipients,
       fields,
       replyTo,
+      attachments: attachments.map((a) => a.filename),
       receivedAt: new Date().toISOString(),
     });
     return { ok: true };
@@ -80,11 +96,14 @@ export async function sendFormEmail({
   const resend = new Resend(apiKey);
   const { error } = await resend.emails.send({
     from: fromEmail,
-    to: toEmail,
+    to: recipients,
     subject,
     html,
     text,
     ...(replyTo ? { replyTo } : {}),
+    ...(attachments.length
+      ? { attachments: attachments.map((a) => ({ filename: a.filename, content: a.content })) }
+      : {}),
   });
 
   if (error) {
