@@ -1,18 +1,10 @@
 import { NextResponse } from "next/server";
 import { sendFormEmail, type EmailField, type EmailAttachment } from "@/lib/email";
-import { saveApplication } from "@/lib/db";
+import { saveApplication, getApplicationRecipients } from "@/lib/db";
 import { APPLICATION_LAYOUT as LAYOUT } from "@/lib/applicationFields";
 import { buildApplicationPdf } from "@/lib/pdf";
 
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-
-// Applications are also sent to these addresses (comma-separated env override).
-const EXTRA_RECIPIENTS = (
-  process.env.APPLICATION_EXTRA_EMAILS || "mariam@hgcare.co.uk"
-)
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
 
 // Filesystem-safe slug for the PDF filename.
 const slug = (s: string) => s.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
@@ -67,6 +59,9 @@ export async function POST(request: Request) {
     console.error("PDF build error:", err);
   }
 
+  // Recipients are configurable from the admin area (fall back to defaults).
+  const recipients = await getApplicationRecipients();
+
   // Save to the database (primary record) and email the team (notification).
   // Run both so one failing doesn't lose the application.
   const [saved, emailed] = await Promise.all([
@@ -75,7 +70,7 @@ export async function POST(request: Request) {
       subject: `New job application — ${firstName} ${surname}`,
       replyTo: email,
       fields,
-      extraRecipients: EXTRA_RECIPIENTS,
+      to: recipients,
       attachments,
     }),
   ]);

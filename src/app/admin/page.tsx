@@ -119,11 +119,19 @@ function Shell({ children }: { children: React.ReactNode }) {
           <h1 className="text-2xl font-bold text-brand-900">HG Care — applications</h1>
           <p className="text-sm text-brand-900/50">Confidential — for recruitment use only.</p>
         </div>
-        <form action="/api/admin/logout" method="post">
-          <button className="rounded-full border border-brand-200 px-4 py-2 text-sm font-semibold text-brand-800 hover:bg-brand-50">
-            Sign out
-          </button>
-        </form>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/settings"
+            className="rounded-full border border-brand-200 px-4 py-2 text-sm font-semibold text-brand-800 hover:bg-brand-50"
+          >
+            Settings
+          </Link>
+          <form action="/api/admin/logout" method="post">
+            <button className="rounded-full border border-brand-200 px-4 py-2 text-sm font-semibold text-brand-800 hover:bg-brand-50">
+              Sign out
+            </button>
+          </form>
+        </div>
       </header>
       {children}
     </div>

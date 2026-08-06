@@ -29,8 +29,9 @@ type SendArgs = {
   fields: EmailField[];
   // Optional reply-to (e.g. the enquirer's email) so staff can just hit reply.
   replyTo?: string;
-  // Extra recipients on top of the default inbox (deduped).
-  extraRecipients?: string[];
+  // Full recipient override. When provided, it replaces the default inbox
+  // (used by the application form, whose recipients are editable in /admin).
+  to?: string[];
   // Optional file attachments.
   attachments?: EmailAttachment[];
 };
@@ -39,13 +40,14 @@ export async function sendFormEmail({
   subject,
   fields,
   replyTo,
-  extraRecipients = [],
+  to,
   attachments = [],
 }: SendArgs): Promise<{ ok: boolean }> {
   const apiKey = process.env.RESEND_API_KEY;
 
-  // Default inbox + any extras, de-duplicated (case-insensitive).
-  const recipients = [toEmail, ...extraRecipients].filter(
+  // Use the explicit recipient list if given, else the default inbox.
+  // De-duplicated (case-insensitive).
+  const recipients = (to && to.length ? to : [toEmail]).filter(
     (email, i, all) =>
       email && all.findIndex((e) => e.toLowerCase() === email.toLowerCase()) === i
   );

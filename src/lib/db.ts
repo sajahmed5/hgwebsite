@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { site } from "@/data/site";
 
 // Persisting job applications to Supabase (Postgres).
 //
@@ -71,6 +72,68 @@ export async function getLanguageCounts(): Promise<{ language: string; speakers:
     return [];
   }
   return (data ?? []) as { language: string; speakers: number }[];
+}
+
+// ─── Application email recipients (editable from the admin area) ───────────
+
+const dedupe = (emails: string[]) =>
+  emails
+    .map((e) => e.trim())
+    .filter(
+      (e, i, all) =>
+        e && all.findIndex((x) => x.toLowerCase() === e.toLowerCase()) === i
+    );
+
+// Where applications go when nothing has been configured in the database yet
+// (mirrors the previous env-var behaviour).
+export function defaultApplicationRecipients(): string[] {
+  const primary = process.env.CONTACT_TO_EMAIL || site.email;
+  const extra = (process.env.APPLICATION_EXTRA_EMAILS || "mariam@hgcare.co.uk")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return dedupe([primary, ...extra]);
+}
+
+const RECIPIENTS_KEY = "application_recipients";
+
+// The current recipient list — from the database if set, else the default.
+export async function getApplicationRecipients(): Promise<string[]> {
+  if (!isDbConfigured()) return defaultApplicationRecipients();
+  const { data, error } = await client()
+    .from("app_settings")
+    .select("value")
+    .eq("key", RECIPIENTS_KEY)
+    .maybeSingle();
+  if (error) {
+    console.error("Supabase settings read error:", error);
+    return defaultApplicationRecipients();
+  }
+  const value = data?.value;
+  return Array.isArray(value) && value.length
+    ? dedupe(value.map(String))
+    : defaultApplicationRecipients();
+}
+
+export async function setApplicationRecipients(
+  emails: string[]
+): Promise<{ ok: boolean; error?: string }> {
+  if (!isDbConfigured())
+    return { ok: false, error: "Database not configured." };
+  const clean = dedupe(emails);
+  if (clean.length === 0)
+    return { ok: false, error: "Please keep at least one recipient." };
+  const { error } = await client()
+    .from("app_settings")
+    .upsert(
+      { key: RECIPIENTS_KEY, value: clean, updated_at: new Date().toISOString() },
+      { onConflict: "key" }
+    );
+  if (error) {
+    console.error("Supabase settings write error:", error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
 }
 
 // Split the comma-joined strings the form sends (e.g. "Urdu, Twi") into a

@@ -45,3 +45,16 @@ select lang as language, count(*)::int as speakers
 from public.applications, unnest(languages) as lang
 group by lang
 order by speakers desc, language;
+
+-- ---------------------------------------------------------------------------
+-- Editable settings (e.g. who receives application emails). Managed from the
+-- admin area. Private like everything else — only the server (service role)
+-- can read/write it.
+-- ---------------------------------------------------------------------------
+create table if not exists public.app_settings (
+  key        text primary key,
+  value      jsonb not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.app_settings enable row level security;
