@@ -15,10 +15,27 @@ const VALUE_W = A4.w - VALUE_X - MARGIN;
 const SIZE = 9.5;
 const LINE = 13;
 
+// The standard PDF fonts use WinAnsi (CP1252) encoding and THROW on any
+// character they can't represent (arrows, emoji, Arabic/CJK, etc.). Convert
+// common symbols to ASCII, keep everything WinAnsi can render, and replace the
+// rest with "?" so building a PDF never fails on real-world applicant data.
+const CP1252_EXTRA =
+  "€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ";
+const UNSAFE = new RegExp(
+  `[^\\x09\\x0A\\x0D\\x20-\\x7E\\u00A0-\\u00FF${CP1252_EXTRA}]`,
+  "g"
+);
+function pdfSafe(s: string): string {
+  return s
+    .replace(/[→➔➜➡⇒]/g, "->")
+    .replace(/[←⬅⇐]/g, "<-")
+    .replace(UNSAFE, "?");
+}
+
 // Split a string (honouring embedded newlines) into lines that fit `maxWidth`.
 function wrap(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
   const out: string[] = [];
-  for (const paragraph of String(text).split("\n")) {
+  for (const paragraph of pdfSafe(String(text)).split("\n")) {
     const words = paragraph.split(/\s+/).filter(Boolean);
     if (words.length === 0) {
       out.push("");
@@ -63,7 +80,9 @@ export async function buildApplicationPdf(
   };
 
   // ── Title block ──
-  const name = [get("firstName"), get("surname")].filter((s) => s !== "—").join(" ") || "Applicant";
+  const name =
+    pdfSafe([get("firstName"), get("surname")].filter((s) => s !== "—").join(" ")) ||
+    "Applicant";
   page.drawText("HG Care — Job Application", { x: MARGIN, y: y - 4, size: 18, font: bold, color: BRAND });
   y -= 24;
   page.drawText(name, { x: MARGIN, y, size: 12, font: bold, color: INK });

@@ -24,7 +24,16 @@ export async function GET(
     return NextResponse.json({ error: "Application not found." }, { status: 404 });
   }
 
-  const pdf = await buildApplicationPdf(app.data ?? {});
+  let pdf: Uint8Array;
+  try {
+    pdf = await buildApplicationPdf(app.data ?? {});
+  } catch (err) {
+    console.error("PDF export error:", err);
+    return NextResponse.json(
+      { error: "Could not generate the PDF for this application." },
+      { status: 500 }
+    );
+  }
   const name =
     slug([app.first_name, app.surname].filter(Boolean).join("-")) || "applicant";
 
