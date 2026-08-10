@@ -71,9 +71,9 @@ export const offices: Office[] = [
   },
   {
     name: "Coventry",
-    lines: ["69 Albany Road", "Earlsdon"],
+    lines: ["Sherbourne House", "Humber Ave"],
     city: "Coventry",
-    postcode: "CV5 6JR",
+    postcode: "CV1 2AQ",
   },
 ];
 
