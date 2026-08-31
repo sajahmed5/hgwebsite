@@ -11,14 +11,20 @@ export const metadata: Metadata = {
 
 const SNAPSHOT = "5 April 2025";
 
-// The six required figures. Pay/bonus gaps confirmed at 0.0%.
+// Workforce gender split — applied evenly across quartiles (single hourly rate).
+const SPLIT = { women: "79.6%", men: "20.4%" };
+
+// Declaration signatory.
+const SIGNATORY = { name: "Sharjeel Ahed", title: "Director", date: "1 April 2026" };
+
+// The six required figures. Hourly pay gaps confirmed 0.0%; bonus figures TBC.
 const figures = [
   { label: "Mean gender pay gap (hourly pay)", value: "0.0%" },
   { label: "Median gender pay gap (hourly pay)", value: "0.0%" },
-  { label: "Mean gender bonus gap", value: "N/A", note: "No bonuses paid" },
-  { label: "Median gender bonus gap", value: "N/A", note: "No bonuses paid" },
-  { label: "Men who received a bonus", value: "0%", note: "No bonuses paid" },
-  { label: "Women who received a bonus", value: "0%", note: "No bonuses paid" },
+  { label: "Mean gender bonus gap", value: "[ __% ]", note: "To be confirmed", pending: true },
+  { label: "Median gender bonus gap", value: "[ __% ]", note: "To be confirmed", pending: true },
+  { label: "Men who received a bonus", value: "[ __% ]", note: "To be confirmed", pending: true },
+  { label: "Women who received a bonus", value: "[ __% ]", note: "To be confirmed", pending: true },
 ];
 
 const quartiles = ["Upper (highest paid)", "Upper middle", "Lower middle", "Lower (lowest paid)"];
@@ -42,9 +48,21 @@ export default function GenderPayGapPage() {
             which is about men and women being paid the same for the same or similar work.
           </p>
           <p>
-            All of our care staff are paid the same hourly rate regardless of gender,
-            and we do not operate any bonus or commission scheme. Our mean and median
-            gender pay gaps are both <strong>0.0%</strong>.
+            We also pay performance-related bonuses; the bonus figures are shown below.
+          </p>
+        </div>
+
+        {/* Why the gap is 0% — reassures readers the figure isn't arbitrary */}
+        <div className="mt-8 rounded-2xl border-l-4 border-accent-500 bg-brand-50 p-6">
+          <h2 className="text-lg font-bold text-brand-900">
+            Why our hourly pay gap is 0.0%
+          </h2>
+          <p className="mt-2 text-sm text-brand-900/80">
+            Every member of our care staff is paid on the same standardised hourly
+            rate for their role, set the same way for everyone regardless of gender.
+            Because men and women are paid on identical terms, the average (mean) and
+            middle (median) hourly pay is the same for both — so the gap is genuinely
+            0.0%, not an estimate.
           </p>
         </div>
 
@@ -53,7 +71,7 @@ export default function GenderPayGapPage() {
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           {figures.map((f) => (
             <div key={f.label} className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm">
-              <div className="text-3xl font-extrabold text-brand-800">{f.value}</div>
+              <div className={`text-3xl font-extrabold ${f.value.startsWith("[") ? "text-accent-600" : "text-brand-800"}`}>{f.value}</div>
               <div className="mt-1 text-sm font-semibold text-brand-900">{f.label}</div>
               {f.note && <div className="mt-1 text-xs text-brand-900/50">{f.note}</div>}
             </div>
@@ -80,15 +98,16 @@ export default function GenderPayGapPage() {
               {quartiles.map((q) => (
                 <tr key={q} className="border-t border-brand-100">
                   <td className="px-4 py-3 font-medium text-brand-900">{q}</td>
-                  <td className="px-4 py-3 text-accent-600">[ __% ]</td>
-                  <td className="px-4 py-3 text-accent-600">[ __% ]</td>
+                  <td className="px-4 py-3 text-brand-900/80">{SPLIT.women}</td>
+                  <td className="px-4 py-3 text-brand-900/80">{SPLIT.men}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p className="mt-2 text-xs text-accent-600">
-          Draft — quartile percentages to be confirmed from your workforce gender split.
+        <p className="mt-2 text-xs text-brand-900/50">
+          As all staff are paid on the same hourly rate, each quartile reflects our
+          overall workforce, which is {SPLIT.women} women and {SPLIT.men} men.
         </p>
 
         {/* Declaration */}
@@ -100,9 +119,9 @@ export default function GenderPayGapPage() {
             Gap Information) Regulations 2017.
           </p>
           <div className="mt-5 space-y-1 text-brand-900">
-            <p><span className="font-semibold">Signed:</span> [ Name ]</p>
-            <p><span className="font-semibold">Job title:</span> [ Job title ]</p>
-            <p><span className="font-semibold">Date:</span> [ Date ]</p>
+            <p><span className="font-semibold">Signed:</span> {SIGNATORY.name}</p>
+            <p><span className="font-semibold">Job title:</span> {SIGNATORY.title}</p>
+            <p><span className="font-semibold">Date:</span> {SIGNATORY.date}</p>
           </div>
         </div>
       </section>
