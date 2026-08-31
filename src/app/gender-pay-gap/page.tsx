@@ -17,14 +17,14 @@ const SPLIT = { women: "79.6%", men: "20.4%" };
 // Declaration signatory.
 const SIGNATORY = { name: "Sharjeel Ahed", title: "Director", date: "1 April 2026" };
 
-// The six required figures. Hourly pay gaps confirmed 0.0%; bonus figures TBC.
+// The six required figures. Hourly pay gaps 0.0%; no bonus scheme (nil figures).
 const figures = [
   { label: "Mean gender pay gap (hourly pay)", value: "0.0%" },
   { label: "Median gender pay gap (hourly pay)", value: "0.0%" },
-  { label: "Mean gender bonus gap", value: "[ __% ]", note: "To be confirmed", pending: true },
-  { label: "Median gender bonus gap", value: "[ __% ]", note: "To be confirmed", pending: true },
-  { label: "Men who received a bonus", value: "[ __% ]", note: "To be confirmed", pending: true },
-  { label: "Women who received a bonus", value: "[ __% ]", note: "To be confirmed", pending: true },
+  { label: "Mean gender bonus gap", value: "N/A", note: "No bonuses paid" },
+  { label: "Median gender bonus gap", value: "N/A", note: "No bonuses paid" },
+  { label: "Men who received a bonus", value: "0%", note: "No bonuses paid" },
+  { label: "Women who received a bonus", value: "0%", note: "No bonuses paid" },
 ];
 
 const quartiles = ["Upper (highest paid)", "Upper middle", "Lower middle", "Lower (lowest paid)"];
@@ -48,7 +48,8 @@ export default function GenderPayGapPage() {
             which is about men and women being paid the same for the same or similar work.
           </p>
           <p>
-            We also pay performance-related bonuses; the bonus figures are shown below.
+            We do not operate a bonus or commission scheme, so all bonus-related
+            figures are nil.
           </p>
         </div>
 
