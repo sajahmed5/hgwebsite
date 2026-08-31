@@ -65,6 +65,14 @@ export default function Footer() {
                 FAQ
               </Link>
             </li>
+            <li>
+              <Link
+                href="/net-zero"
+                className="text-brand-100/80 transition-colors hover:text-white"
+              >
+                Net Zero 2050
+              </Link>
+            </li>
           </ul>
         </div>
 

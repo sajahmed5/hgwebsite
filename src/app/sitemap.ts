@@ -18,5 +18,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...pages, ...servicePages];
+  const extraPages = [
+    {
+      url: `${baseUrl}/net-zero`,
+      lastModified: new Date(),
+      changeFrequency: "yearly" as const,
+      priority: 0.4,
+    },
+  ];
+
+  return [...pages, ...servicePages, ...extraPages];
 }
