@@ -136,6 +136,14 @@ export default function Footer() {
             <Link href="/faq" className="transition-colors hover:text-white">
               FAQ
             </Link>
+            <a
+              href="https://yellowloaf.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-colors hover:text-white"
+            >
+              Website by Yellowloaf
+            </a>
           </div>
         </div>
       </div>
