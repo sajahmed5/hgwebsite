@@ -144,6 +144,14 @@ export default function Footer() {
             >
               Website by Yellowloaf
             </a>
+            <a
+              href="https://myroster.care"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-colors hover:text-white"
+            >
+              We use MyRoster
+            </a>
           </div>
         </div>
       </div>
