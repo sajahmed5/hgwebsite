@@ -1,6 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import Script from "next/script";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+// Human verification (see src/lib/humanCheck.ts): a signed token fetched when
+// the form opens, plus Cloudflare Turnstile's box once its site key is set.
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
+
+type Turnstile = {
+  render: (el: HTMLElement, opts: Record<string, unknown>) => string;
+  reset: (id?: string) => void;
+  remove: (id?: string) => void;
+};
+declare global {
+  interface Window {
+    turnstile?: Turnstile;
+  }
+}
 
 type Errors = Record<string, string>;
 
@@ -13,15 +29,70 @@ export default function ContactForm() {
     "idle"
   );
   const [errors, setErrors] = useState<Errors>({});
+  const [serverError, setServerError] = useState("");
+  const [formToken, setFormToken] = useState("");
+  const [humanAnswer, setHumanAnswer] = useState("");
+  const [turnstileReady, setTurnstileReady] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const widgetId = useRef<string | null>(null);
+
+  const loadFormToken = useCallback(async () => {
+    try {
+      const res = await fetch("/api/contact", { cache: "no-store" });
+      const body = await res.json();
+      if (typeof body.token === "string") setFormToken(body.token);
+    } catch {
+      // The server refuses without it and the form says so.
+    }
+  }, []);
+
+  // A fresh token each time the form is shown (including "Send another").
+  useEffect(() => {
+    if (status === "idle" && !formToken) loadFormToken();
+  }, [status, formToken, loadFormToken]);
+
+  // Draw the Turnstile box once its script has loaded and the form is showing.
+  const formShowing = status !== "sent";
+  useEffect(() => {
+    if (!TURNSTILE_SITE_KEY || !turnstileReady || !formShowing) return;
+    const el = boxRef.current;
+    if (!el || !window.turnstile || widgetId.current) return;
+    widgetId.current = window.turnstile.render(el, {
+      sitekey: TURNSTILE_SITE_KEY,
+      theme: "light",
+      callback: (answer: string) => setHumanAnswer(answer),
+      "expired-callback": () => setHumanAnswer(""),
+      "error-callback": () => setHumanAnswer(""),
+    });
+    return () => {
+      if (widgetId.current) window.turnstile?.remove(widgetId.current);
+      widgetId.current = null;
+    };
+  }, [turnstileReady, formShowing]);
+
+  function resetHumanCheck() {
+    setFormToken("");
+    setHumanAnswer("");
+    if (widgetId.current) window.turnstile?.reset(widgetId.current);
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setStatus("sending");
     setErrors({});
+    setServerError("");
+    if (TURNSTILE_SITE_KEY && !humanAnswer) {
+      setServerError("Please tick the box to confirm you're not a robot.");
+      return;
+    }
+    setStatus("sending");
 
     const form = e.currentTarget;
     const fd = new FormData(form);
-    const payload = Object.fromEntries(fd.entries());
+    const payload = {
+      ...Object.fromEntries(fd.entries()),
+      formToken,
+      "cf-turnstile-response": humanAnswer,
+    };
 
     try {
       const res = await fetch("/api/contact", {
@@ -32,11 +103,17 @@ export default function ContactForm() {
       if (res.ok) {
         setStatus("sent");
         form.reset();
+        resetHumanCheck();
         return;
       }
       const body = await res.json().catch(() => ({}));
       if (body.errors) {
         setErrors(body.errors);
+        setStatus("idle");
+      } else if (body.retry) {
+        // Verification failed or ran out: get a fresh check and let them resend.
+        setServerError(String(body.error || "Please try sending again."));
+        resetHumanCheck();
         setStatus("idle");
       } else {
         setStatus("error");
@@ -124,6 +201,23 @@ export default function ContactForm() {
         <textarea id="message" name="message" rows={5} className={`mt-1.5 ${field}`} placeholder="Tell us a little about the care you're looking for…" />
         {errors.message && <p className="mt-1 text-sm text-accent-600">{errors.message}</p>}
       </div>
+
+      {TURNSTILE_SITE_KEY && (
+        <>
+          <Script
+            src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+            strategy="afterInteractive"
+            onReady={() => setTurnstileReady(true)}
+          />
+          <div ref={boxRef} className="min-h-[65px]" />
+        </>
+      )}
+
+      {serverError && (
+        <p role="alert" className="rounded-lg bg-accent-50 px-4 py-3 text-sm text-accent-700">
+          {serverError}
+        </p>
+      )}
 
       {status === "error" && (
         <p className="rounded-lg bg-accent-50 px-4 py-3 text-sm text-accent-700">
