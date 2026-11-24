@@ -8,7 +8,7 @@ Built with **Next.js 15** (App Router), **TypeScript** and **Tailwind CSS v4**.
 
 - Warm, caring, fully responsive design
 - Home, About, Services (+ detail pages), HG Wellbeing, HG Training, Careers, Contact
-- Working **enquiry form** and **job-application form** (with validation + spam honeypot)
+- Working **enquiry form** and **job-application form** (with validation + spam honeypot; the enquiry form also has human verification — see `src/lib/humanCheck.ts`)
 - SEO ready: per-page metadata, sitemap, robots, Open Graph
 - Accessible: skip link, semantic markup, keyboard-friendly nav
 - No paid assets — icons and illustrations are inline SVG/emoji

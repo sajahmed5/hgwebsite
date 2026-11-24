@@ -1,6 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Script from "next/script";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+// Human verification (see src/lib/humanCheck.ts): a signed token fetched when
+// the form opens, plus Cloudflare Turnstile's box once its site key is set.
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
+
+type Turnstile = {
+  render: (el: HTMLElement, opts: Record<string, unknown>) => string;
+  reset: (id?: string) => void;
+  remove: (id?: string) => void;
+};
+declare global {
+  interface Window {
+    turnstile?: Turnstile;
+  }
+}
 
 type Errors = Record<string, string>;
 
@@ -8,98 +24,75 @@ const field =
   "w-full rounded-xl border border-brand-200 bg-white px-4 py-3 text-brand-900 placeholder-brand-900/40 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-200";
 const label = "block text-sm font-semibold text-brand-900";
 
-// Cloudflare Turnstile site key (safe to expose publicly). When unset, the
-// widget is skipped entirely so the form still works in local dev / setup.
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-
-declare global {
-  interface Window {
-    turnstile?: {
-      render: (
-        el: HTMLElement,
-        opts: {
-          sitekey: string;
-          callback: (token: string) => void;
-          "expired-callback"?: () => void;
-          "error-callback"?: () => void;
-          theme?: "auto" | "light" | "dark";
-        }
-      ) => string;
-      reset: (widgetId?: string) => void;
-    };
-  }
-}
-
 export default function ContactForm() {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle"
   );
   const [errors, setErrors] = useState<Errors>({});
-  const [token, setToken] = useState("");
+  const [serverError, setServerError] = useState("");
+  const [formToken, setFormToken] = useState("");
+  const [humanAnswer, setHumanAnswer] = useState("");
+  const [turnstileReady, setTurnstileReady] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const widgetId = useRef<string | null>(null);
 
-  const widgetRef = useRef<HTMLDivElement>(null);
-  const widgetIdRef = useRef<string | null>(null);
-
-  // Load and render the Turnstile widget (only when a site key is configured).
-  useEffect(() => {
-    if (!TURNSTILE_SITE_KEY) return;
-
-    function render() {
-      if (
-        !window.turnstile ||
-        !widgetRef.current ||
-        widgetIdRef.current !== null
-      )
-        return;
-      widgetIdRef.current = window.turnstile.render(widgetRef.current, {
-        sitekey: TURNSTILE_SITE_KEY!,
-        theme: "light",
-        callback: (t) => setToken(t),
-        "expired-callback": () => setToken(""),
-        "error-callback": () => setToken(""),
-      });
+  const loadFormToken = useCallback(async () => {
+    try {
+      const res = await fetch("/api/contact", { cache: "no-store" });
+      const body = await res.json();
+      if (typeof body.token === "string") setFormToken(body.token);
+    } catch {
+      // The server refuses without it and the form says so.
     }
-
-    if (window.turnstile) {
-      render();
-      return;
-    }
-
-    const existing = document.querySelector<HTMLScriptElement>(
-      "script[data-turnstile]"
-    );
-    if (existing) {
-      existing.addEventListener("load", render);
-      return () => existing.removeEventListener("load", render);
-    }
-
-    const script = document.createElement("script");
-    script.src =
-      "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-    script.async = true;
-    script.defer = true;
-    script.dataset.turnstile = "true";
-    script.addEventListener("load", render);
-    document.head.appendChild(script);
-    return () => script.removeEventListener("load", render);
   }, []);
 
-  function resetWidget() {
-    setToken("");
-    if (widgetIdRef.current !== null && window.turnstile) {
-      window.turnstile.reset(widgetIdRef.current);
-    }
+  // A fresh token each time the form is shown (including "Send another").
+  useEffect(() => {
+    if (status === "idle" && !formToken) loadFormToken();
+  }, [status, formToken, loadFormToken]);
+
+  // Draw the Turnstile box once its script has loaded and the form is showing.
+  const formShowing = status !== "sent";
+  useEffect(() => {
+    if (!TURNSTILE_SITE_KEY || !turnstileReady || !formShowing) return;
+    const el = boxRef.current;
+    if (!el || !window.turnstile || widgetId.current) return;
+    widgetId.current = window.turnstile.render(el, {
+      sitekey: TURNSTILE_SITE_KEY,
+      theme: "light",
+      callback: (answer: string) => setHumanAnswer(answer),
+      "expired-callback": () => setHumanAnswer(""),
+      "error-callback": () => setHumanAnswer(""),
+    });
+    return () => {
+      if (widgetId.current) window.turnstile?.remove(widgetId.current);
+      widgetId.current = null;
+    };
+  }, [turnstileReady, formShowing]);
+
+  function resetHumanCheck() {
+    setFormToken("");
+    setHumanAnswer("");
+    if (widgetId.current) window.turnstile?.reset(widgetId.current);
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setStatus("sending");
     setErrors({});
+    setServerError("");
+    if (TURNSTILE_SITE_KEY && !humanAnswer) {
+      setServerError("Please tick the box to confirm you're not a robot.");
+      return;
+    }
+    setStatus("sending");
 
     const form = e.currentTarget;
     const fd = new FormData(form);
-    const payload = Object.fromEntries(fd.entries());
-    if (TURNSTILE_SITE_KEY) payload["turnstileToken"] = token;
+    const payload = {
+      ...Object.fromEntries(fd.entries()),
+      formToken,
+      "cf-turnstile-response": humanAnswer,
+    };
 
     try {
       const res = await fetch("/api/contact", {
@@ -110,20 +103,22 @@ export default function ContactForm() {
       if (res.ok) {
         setStatus("sent");
         form.reset();
-        resetWidget();
+        resetHumanCheck();
         return;
       }
       const body = await res.json().catch(() => ({}));
-      // A used/expired token can't be reused — reset so they can retry.
-      resetWidget();
       if (body.errors) {
         setErrors(body.errors);
+        setStatus("idle");
+      } else if (body.retry) {
+        // Verification failed or ran out: get a fresh check and let them resend.
+        setServerError(String(body.error || "Please try sending again."));
+        resetHumanCheck();
         setStatus("idle");
       } else {
         setStatus("error");
       }
     } catch {
-      resetWidget();
       setStatus("error");
     }
   }
@@ -146,10 +141,6 @@ export default function ContactForm() {
       </div>
     );
   }
-
-  const needsVerification = Boolean(TURNSTILE_SITE_KEY);
-  const submitDisabled =
-    status === "sending" || (needsVerification && !token);
 
   return (
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
@@ -211,13 +202,21 @@ export default function ContactForm() {
         {errors.message && <p className="mt-1 text-sm text-accent-600">{errors.message}</p>}
       </div>
 
-      {needsVerification && (
-        <div>
-          <div ref={widgetRef} className="min-h-[65px]" />
-          {errors.turnstile && (
-            <p className="mt-1 text-sm text-accent-600">{errors.turnstile}</p>
-          )}
-        </div>
+      {TURNSTILE_SITE_KEY && (
+        <>
+          <Script
+            src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+            strategy="afterInteractive"
+            onReady={() => setTurnstileReady(true)}
+          />
+          <div ref={boxRef} className="min-h-[65px]" />
+        </>
+      )}
+
+      {serverError && (
+        <p role="alert" className="rounded-lg bg-accent-50 px-4 py-3 text-sm text-accent-700">
+          {serverError}
+        </p>
       )}
 
       {status === "error" && (
@@ -229,7 +228,7 @@ export default function ContactForm() {
 
       <button
         type="submit"
-        disabled={submitDisabled}
+        disabled={status === "sending"}
         className="w-full rounded-full bg-accent-500 px-7 py-3.5 font-semibold text-white shadow-sm transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-70"
       >
         {status === "sending" ? "Sending…" : "Send enquiry"}

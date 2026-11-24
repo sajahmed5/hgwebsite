@@ -1,35 +1,22 @@
 import { NextResponse } from "next/server";
 import { sendFormEmail } from "@/lib/email";
+import { checkFormToken, issueFormToken, verifyTurnstile } from "@/lib/humanCheck";
+
+export const dynamic = "force-dynamic";
+
+// The form calls this when it opens to get its token (src/lib/humanCheck.ts).
+export async function GET() {
+  return NextResponse.json(
+    { token: issueFormToken() },
+    { headers: { "Cache-Control": "no-store" } }
+  );
+}
+
+const VERIFY_AGAIN =
+  "We couldn't confirm you're a person rather than a spam robot. Please try sending again, or call us.";
 
 // Basic, dependency-free email shape check.
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-
-// Verify a Cloudflare Turnstile token with Cloudflare's siteverify API.
-// Returns true when the token is valid, OR when no secret is configured
-// (so the form still works during local dev / before keys are set up).
-async function verifyTurnstile(
-  token: string,
-  ip: string | null
-): Promise<boolean> {
-  const secret = process.env.TURNSTILE_SECRET_KEY;
-  if (!secret) return true; // Not configured — skip verification.
-  if (!token) return false;
-
-  try {
-    const body = new URLSearchParams({ secret, response: token });
-    if (ip) body.append("remoteip", ip);
-
-    const res = await fetch(
-      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-      { method: "POST", body }
-    );
-    const data = (await res.json()) as { success?: boolean };
-    return Boolean(data.success);
-  } catch (err) {
-    console.error("Turnstile verification error:", err);
-    return false;
-  }
-}
 
 export async function POST(request: Request) {
   let data: Record<string, unknown>;
@@ -52,21 +39,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  // Human verification — must pass before we do anything else.
-  const turnstileToken = String(data.turnstileToken ?? "").trim();
-  const ip =
-    request.headers.get("cf-connecting-ip") ||
-    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    null;
-  const human = await verifyTurnstile(turnstileToken, ip);
-  if (!human) {
+  // Human verification: the form's own token first (free, no network), then
+  // Cloudflare Turnstile when it is switched on.
+  const tokenCheck = checkFormToken(data.formToken);
+  if (tokenCheck !== "ok") {
+    console.warn(`[contact] refused: form token ${tokenCheck}`);
     return NextResponse.json(
-      {
-        errors: {
-          turnstile: "Please complete the verification and try again.",
-        },
-      },
-      { status: 422 }
+      { error: VERIFY_AGAIN, retry: true },
+      { status: 400 }
     );
   }
 
@@ -79,6 +59,17 @@ export async function POST(request: Request) {
 
   if (Object.keys(errors).length > 0) {
     return NextResponse.json({ errors }, { status: 422 });
+  }
+
+  // Turnstile last: its answer can be used only once, so a typo above must
+  // not spend it.
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+  if (!(await verifyTurnstile(data["cf-turnstile-response"], ip))) {
+    console.warn("[contact] refused: Turnstile check failed");
+    return NextResponse.json(
+      { error: VERIFY_AGAIN, retry: true },
+      { status: 400 }
+    );
   }
 
   const { ok } = await sendFormEmail({
