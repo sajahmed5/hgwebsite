@@ -4,6 +4,33 @@ import { sendFormEmail } from "@/lib/email";
 // Basic, dependency-free email shape check.
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
+// Verify a Cloudflare Turnstile token with Cloudflare's siteverify API.
+// Returns true when the token is valid, OR when no secret is configured
+// (so the form still works during local dev / before keys are set up).
+async function verifyTurnstile(
+  token: string,
+  ip: string | null
+): Promise<boolean> {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret) return true; // Not configured — skip verification.
+  if (!token) return false;
+
+  try {
+    const body = new URLSearchParams({ secret, response: token });
+    if (ip) body.append("remoteip", ip);
+
+    const res = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      { method: "POST", body }
+    );
+    const data = (await res.json()) as { success?: boolean };
+    return Boolean(data.success);
+  } catch (err) {
+    console.error("Turnstile verification error:", err);
+    return false;
+  }
+}
+
 export async function POST(request: Request) {
   let data: Record<string, unknown>;
   try {
@@ -23,6 +50,24 @@ export async function POST(request: Request) {
   if (honeypot) {
     // Silently accept to avoid tipping off spam bots.
     return NextResponse.json({ ok: true });
+  }
+
+  // Human verification — must pass before we do anything else.
+  const turnstileToken = String(data.turnstileToken ?? "").trim();
+  const ip =
+    request.headers.get("cf-connecting-ip") ||
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    null;
+  const human = await verifyTurnstile(turnstileToken, ip);
+  if (!human) {
+    return NextResponse.json(
+      {
+        errors: {
+          turnstile: "Please complete the verification and try again.",
+        },
+      },
+      { status: 422 }
+    );
   }
 
   const errors: Record<string, string> = {};
